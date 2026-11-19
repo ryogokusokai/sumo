@@ -1,0 +1,21 @@
+/* 一門別の一覧 */
+.ichcols{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;align-items:start}
+.ichcol{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--c);border-radius:10px;padding:0 0 8px;scroll-margin-top:70px}
+.ichcol header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 12px;background:color-mix(in srgb,var(--c) 12%,var(--card));border-bottom:1px solid var(--line)}
+.ichcol header b{font-size:17px;color:var(--c)}
+.ichcol header span{font-size:12px;color:var(--sub)}
+.ilist,.ilist ul{list-style:none;margin:0;padding:0}
+.ilist>li{padding:6px 12px;border-bottom:1px solid var(--line)}
+.ilist>li:last-child{border-bottom:0}
+.ilist ul{margin:4px 0 0 6px;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--c) 45%,transparent)}
+.ilist ul li{padding:4px 0}
+.irow{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.irow a.rk{font-size:15px}
+.icnt{margin-left:auto;font-size:12px;color:var(--sub);white-space:nowrap}.icnt b{color:var(--ink);font-weight:600}
+.imeta{font-size:11px;color:var(--sub)}
+.inote{display:inline-block;margin-left:6px;padding:0 6px;border-radius:4px;background:var(--chip)}
+.inote .dot{width:7px;height:7px;margin:0 2px 0 0}
+.ichcol.iflash{animation:iflash 1.2s ease 1}
+@keyframes iflash{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 3px var(--c)}}
+.ichb{font-size:10px;padding:0 5px;border-radius:4px;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--ink);white-space:nowrap}
+#hview{margin-bottom:2px}
