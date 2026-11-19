@@ -17,5 +17,6 @@
 .ychip small{color:var(--sub)}.ychip small.w{color:var(--win)}.ychip small.l{color:var(--loss)}
 .ychip.h{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}.ychip.m{border-color:var(--sub)}.ychip.lo{opacity:.75}
 .ychip.sched{background:var(--chip);font-weight:600}
+.ychip small.h2h{margin-left:2px}
 .ylegend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;font-size:12px}
 @media (max-width:520px){.prow{grid-template-columns:1fr 54px}.prow .pb{grid-column:1/-1;grid-row:2}.ycards{grid-template-columns:1fr}}

@@ -106,7 +106,8 @@ function yuSummary(S,sim){
   const clinch=g0.length===1&&L.every(r=>r===g0[0]||r.maxW<g0[0].w)?g0[0]:null;
   if(fin){out.push(g0.length===1?`千秋楽を終えて、${nmr(g0[0])}が${yuRec(g0[0])}で最多勝です。`:`千秋楽を終えて、${g0.map(nmr).join("・")}が${yuRec(g0[0])}で並びました（優勝決定戦の結果はこのページでは扱っていません）。`);return out}
   if(clinch)out.push(`${nmr(clinch)}の優勝が決まりました（${yuRec(clinch)}。ほかの力士は残り全勝しても届きません）。`);
-  out.push(`首位は${g0.map(nmr).join("・")}（${yuRec(g0[0])}）${g0.length===1?"の単独":`の${g0.length}人`}。`+[1,2].map(k=>{const x=g(k);return x.length?`${k}差に${x.slice(0,6).map(nmr).join("・")}${x.length>6?`ほか${x.length-6}人`:""}`:""}).filter(Boolean).join("、")+"。");
+  const sameRec=g0.every(r=>r.l===g0[0].l&&r.a===g0[0].a);
+  out.push(`首位は${sameRec?`${g0.map(nmr).join("・")}（${yuRec(g0[0])}）`:g0.map(r=>`${nmr(r)}（${yuRec(r)}）`).join("・")}${g0.length===1?"の単独":`の${g0.length}人`}。`+[1,2].map(k=>{const x=g(k);return x.length?`${k}差に${x.slice(0,6).map(nmr).join("・")}${x.length>6?`ほか${x.length-6}人`:""}`:""}).filter(Boolean).join("、")+"。");
   const pr=[...L].map(r=>({r,p:sim.prob.get(r.id)})).filter(o=>o.p>=.005).sort((a,b)=>b.p-a.p);
   if(pr.length&&!clinch)out.push(`残りの取組を${sim.n.toLocaleString()}回シミュレーションすると、優勝確率は${pr.slice(0,4).map(o=>`${nmr(o.r)} ${yuPct(o.p)}`).join("、")}です。`);
   const ln=Object.entries(sim.line).map(([w,c])=>[+w,c]).sort((a,b)=>b[1]-a[1]);
@@ -196,10 +197,13 @@ async function viewYusho(basho,div,my){
   $("#bsel").onchange=e=>location.hash=`yusho-${e.target.value}-${div}`;
   $$("#ydiv button").forEach(b=>b.onclick=()=>location.hash=`yusho-${basho}-${b.dataset.d}`);
   /* 対戦成績は後から埋める（上位の候補だけ） */
-  const els=$$(".ycards .h2h");const seen=new Set();const jobs=[];
-  for(const el of els){const k=el.dataset.a+"-"+el.dataset.b;if(!seen.has(k)){seen.add(k);jobs.push(el)}}
-  await pool(jobs.slice(0,60),async el=>{const v=await yuH2H(el.dataset.a,el.dataset.b);if(!live(my))return;
-    $$(`.h2h[data-a="${el.dataset.a}"][data-b="${el.dataset.b}"]`).forEach(x=>{x.textContent=` 通算${v.w}-${v.l}`;x.classList.add(v.w>v.l?"w":v.l>v.w?"l":"muted")})},4);
+  const fill=async(els,max)=>{const seen=new Set(),jobs=[];
+    for(const el of els){const k=el.dataset.a+"-"+el.dataset.b;if(!el.textContent&&!seen.has(k)){seen.add(k);jobs.push(el)}}
+    await pool(jobs.slice(0,max),async el=>{const v=await yuH2H(el.dataset.a,el.dataset.b);if(!live(my))return;
+      $$(`.h2h[data-a="${el.dataset.a}"][data-b="${el.dataset.b}"]`).forEach(x=>{x.textContent=` 通算${v.w}-${v.l}`;x.classList.add(v.w>v.l?"w":v.l>v.w?"l":"muted")})},4)};
+  /* 折りたたみ（ルール上は当たりうる相手）は開いたときに取得 */
+  $$(".ycards details").forEach(d=>d.addEventListener("toggle",()=>{if(d.open)fill([...d.querySelectorAll(".h2h")],40)}));
+  await fill($$(".ycards .h2h").filter(el=>!el.closest("details")),90);
 }
 
 /* ルーティング：core.js の route() は該当しないハッシュを番付として扱うので、
