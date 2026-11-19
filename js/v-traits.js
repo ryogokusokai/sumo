@@ -24,7 +24,12 @@ const trNow=()=>Date.now()+9*3600e3;
 function trOngoing(b){const s=trStart(b),n=trNow();return n>=s&&n<s+15*864e5}
 function trTop(list,n){const o={};for(const k of list)o[k]=(o[k]||0)+1;return Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,n)}
 
-function rkTraits(id,matches,cur,curB){
+let TOKUI=null;
+async function trTokui(){if(TOKUI)return TOKUI;try{TOKUI=await fetch("data/tokui.json?v=1").then(r=>r.ok?r.json():{})}catch(e){TOKUI={}}return TOKUI}
+function trTokuiHtml(t){if(!t)return`<div class="kv"><span>得意技（Wikipedia）</span><b style="font-size:14px">未取得</b></div>`;
+  const url="https://ja.wikipedia.org/wiki/"+encodeURIComponent(t.title)+(t.rev?"?oldid="+t.rev:"");
+  return`<div class="kv trtk"><span>得意技（Wikipedia）</span><b style="font-size:15px">${t.tk?esc(t.tk):'<span class="muted" style="font-weight:400">記載なし</span>'}</b><span>出典：<a href="${url}" target="_blank" rel="noopener">Wikipedia「${esc(t.title)}」</a>（${esc(TOKUI.fetched||"")}取得）</span></div>`}
+function rkTraits(id,matches,cur,curB,tk){
   if(!cur||!cur.ord||cur.ord>6)return"";
   const done=matches.filter(m=>m.winnerId&&m.day<=15); /* 優勝決定戦（16日目扱い）は除く */
   const won=m=>m.winnerId===id;
@@ -74,10 +79,11 @@ function rkTraits(id,matches,cur,curB){
    <div class="trleg">${TR_CAT.map(([,j,c])=>`<span><i style="background:${c}"></i>${j}</span>`).join("")}</div>
    <table class="trtbl"><thead><tr><th>場所</th><th>番付</th><th class="c">成績</th><th>勝ちの決まり手（上位3）</th></tr></thead><tbody>${rows}</tbody></table>
    <div class="grid trkv">
+    ${trTokuiHtml(tk)}
     <div class="kv"><span>直近3場所の負け方（上位3）</span><b style="font-size:14px">${lossTop}</b></div>
     <div class="kv"><span>直近3場所の三役以上との対戦</span><b>${upper.length?`${uw}勝${ul}敗`:"対戦なし"}</b></div>
    </div>
-   <p class="trnote">成績は不戦勝・不戦敗を含み（優勝決定戦は除く）、決まり手の集計からは不戦を除いています。左右の四つ・得意技の公式表記はデータにないため載せていません。</p>
+   <p class="trnote">成績は不戦勝・不戦敗を含み（優勝決定戦は除く）、決まり手の集計からは不戦を除いています。得意技はWikipediaの記載（取得日時点）で、協会の公式表記ではありません。</p>
   </div>`;
 }
 
@@ -85,4 +91,4 @@ function rkTraits(id,matches,cur,curB){
 {const _vr=viewRikishi;viewRikishi=async function(id,my){await _vr(id,my);if(!live(my))return;
   try{const r=await api(`/rikishi/${id}?ranks=true&shikonas=true&measurements=true`,3600);const cur=parseRank(r.currentRank);if(!cur||!cur.ord||cur.ord>6)return;
     let matches=[],skip=0;while(true){const m=await api(`/rikishi/${id}/matches?limit=1000&skip=${skip}`,600);const rs=m.records||[];matches=matches.concat(rs);if(rs.length<1000)break;skip+=1000}
-    if(!live(my))return;const h=[...$$("#app h2")].find(x=>x.textContent.startsWith("番付推移"));const curB=await currentBasho();const html=rkTraits(id,matches,cur,curB);if(h&&html)h.insertAdjacentHTML("beforebegin",html)}catch(e){console.error(e)}}}
+    if(!live(my))return;const h=[...$$("#app h2")].find(x=>x.textContent.startsWith("番付推移"));const curB=await currentBasho();const TK=await trTokui();const html=rkTraits(id,matches,cur,curB,(TK.rikishi||{})[id]);if(h&&html)h.insertAdjacentHTML("beforebegin",html)}catch(e){console.error(e)}}}
