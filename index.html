@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>土俵データ帳</title>
+<style>
+:root{--bg:#f7f5f0;--card:#fff;--ink:#1d1b18;--sub:#6b665d;--line:#e4dfd4;--accent:#9b2c1f;--win:#1f6f43;--loss:#9b2c1f;--chip:#efeae0}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--card:#1d1c19;--ink:#ece8df;--sub:#9d978b;--line:#2f2d28;--accent:#e0705f;--win:#5cc28a;--loss:#e0705f;--chip:#28261f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:14px;line-height:1.5}
+header{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1100px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:17px;color:var(--accent);text-decoration:none;letter-spacing:.05em}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{color:var(--ink);text-decoration:none;padding:5px 10px;border-radius:6px;font-size:14px}
+nav a.on{background:var(--accent);color:#fff}
+main{max-width:1100px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:4px 0 12px}
+h2{font-size:16px;margin:22px 0 8px;padding-left:8px;border-left:4px solid var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.tabs button,.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:5px 11px;border-radius:999px;font-size:13px;cursor:pointer;font-family:inherit}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;background:var(--card)}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left}
+th{font-size:12px;color:var(--sub);font-weight:600;background:var(--chip);position:sticky;top:0}
+th.sort{cursor:pointer;user-select:none}
+td.c,th.c{text-align:center}td.r,th.r{text-align:right}
+a.rk{color:var(--ink);font-weight:600;text-decoration:none;border-bottom:1px dotted var(--sub)}
+.w{color:var(--win);font-weight:700}.l{color:var(--loss);font-weight:700}
+.muted{color:var(--sub);font-size:12px}
+.tag{display:inline-block;font-size:11px;padding:0 6px;border-radius:4px;background:var(--chip);color:var(--sub);margin-left:4px}
+.tag.hot{background:var(--accent);color:#fff}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+input,select{font-family:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.kv{background:var(--chip);border-radius:8px;padding:8px 10px}.kv b{display:block;font-size:17px}.kv span{font-size:12px;color:var(--sub)}
+.bar{height:8px;background:var(--accent);border-radius:4px}
+.loading{padding:30px;text-align:center;color:var(--sub)}
+.err{padding:14px;color:var(--loss)}
+.race li{margin:3px 0}
+.bout td.mid{color:var(--sub);font-size:12px;text-align:center}
+svg text{fill:var(--sub);font-size:10px}
+footer{max-width:1100px;margin:20px auto;padding:0 14px 30px;color:var(--sub);font-size:12px}
+footer a{color:var(--sub)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.ichip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:13px;font-family:inherit;color:var(--ink)}
+.ichip.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.ichsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:12px}
+.ichsum .kv{border-left:5px solid var(--c)}
+.tree,.tree ul{list-style:none;margin:0;padding:0}
+.tree ul{margin-left:9px;padding-left:16px;border-left:1px solid var(--line)}
+.tree li{position:relative;padding:3px 0}
+.tree ul>li::before{content:"";position:absolute;left:-16px;top:14px;width:12px;border-top:1px solid var(--line)}
+.node{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:6px;padding:2px 8px;border-radius:6px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c)}
+.node.def{opacity:.55;border-style:dashed;border-left-style:solid}
+.node a{color:var(--ink);font-weight:700;text-decoration:none}
+.node .sub{font-size:11px;color:var(--sub)}
+.node.dim{opacity:.25}
+.chain{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:13px}
+</style>
+</head>
+<body>
+<header><div class="hwrap"><a class="logo" href="#banzuke">土俵データ帳</a>
+<nav id="nav"><a href="#banzuke" data-k="banzuke">番付</a><a href="#day" data-k="day">取組結果</a><a href="#rikishi" data-k="rikishi">力士一覧</a><a href="#heya" data-k="heya">部屋・一門</a></nav></div></header>
+<main id="app"><div class="loading">読み込み中…</div></main>
+<footer>データ: <a href="https://www.sumo-api.com/" target="_blank" rel="noopener">Sumo API</a>（非公式・個人利用）。表示は最大数分遅れることがあります。</footer>
+<script>
+"use strict";
+const API="https://www.sumo-api.com/api";
+const DIVS=[["Makuuchi","幕内"],["Juryo","十両"],["Makushita","幕下"],["Sandanme","三段目"],["Jonidan","序二段"],["Jonokuchi","序ノ口"]];
+const DIVJP=Object.fromEntries(DIVS);
+const BASHO_NAME={"01":"初場所","03":"春場所","05":"夏場所","07":"名古屋場所","09":"秋場所","11":"九州場所"};
+const RANK={Yokozuna:["横綱","横",1],Ozeki:["大関","大",2],Sekiwake:["関脇","関",3],Komusubi:["小結","小",4],Maegashira:["前頭","前",5],Juryo:["十両","十",6],Makushita:["幕下","幕",7],Sandanme:["三段目","三",8],Jonidan:["序二段","二",9],Jonokuchi:["序ノ口","口",10]};
+const HEYA={Ajigawa:"安治川",Arashio:"荒汐",Asahiyama:"朝日山",Asakayama:"浅香山",Dewanoumi:"出羽海",Fujishima:"藤島",Futagoyama:"二子山",Hakkaku:"八角",Hanaregoma:"放駒",Hidenoyama:"秀ノ山",Ikazuchi:"雷",Isegahama:"伊勢ヶ濱",Isenoumi:"伊勢ノ海",Kasugano:"春日野",Kataonami:"片男波",Kise:"木瀬",Kokonoe:"九重",Minato:"湊",Minatogawa:"湊川",Musashigawa:"武蔵川",Nakamura:"中村",Naruto:"鳴戸",Nishiiwa:"西岩",Nishikido:"錦戸",Nishonoseki:"二所ノ関",Oitekaze:"追手風",Onoe:"尾上",Onomatsu:"阿武松",Oshima:"大島",Oshiogawa:"押尾川",Otake:"大嶽",Otowayama:"音羽山",Sadogatake:"佐渡ヶ嶽",Sakaigawa:"境川",Shibatayama:"芝田山",Shikihide:"式秀",Shikoroyama:"錣山",Tagonoura:"田子ノ浦",Takadagawa:"高田川",Takasago:"高砂",Takekuma:"武隈",Tamanoi:"玉ノ井",Tatsunami:"立浪",Tokitsukaze:"時津風",Yamahibiki:"山響"};
+const PREF={Hokkaido:"北海道",Aomori:"青森",Iwate:"岩手",Miyagi:"宮城",Akita:"秋田",Yamagata:"山形",Fukushima:"福島",Ibaraki:"茨城",Tochigi:"栃木",Gunma:"群馬",Saitama:"埼玉",Chiba:"千葉",Tokyo:"東京",Kanagawa:"神奈川",Niigata:"新潟",Toyama:"富山",Ishikawa:"石川",Fukui:"福井",Yamanashi:"山梨",Nagano:"長野",Gifu:"岐阜",Shizuoka:"静岡",Aichi:"愛知",Mie:"三重",Shiga:"滋賀",Kyoto:"京都",Osaka:"大阪",Hyogo:"兵庫",Nara:"奈良",Wakayama:"和歌山",Tottori:"鳥取",Shimane:"島根",Okayama:"岡山",Hiroshima:"広島",Yamaguchi:"山口",Tokushima:"徳島",Kagawa:"香川",Ehime:"愛媛",Kochi:"高知",Fukuoka:"福岡",Saga:"佐賀",Nagasaki:"長崎",Kumamoto:"熊本",Oita:"大分",Miyazaki:"宮崎",Kagoshima:"鹿児島",Okinawa:"沖縄",Mongolia:"モンゴル",China:"中国",Russia:"ロシア",Ukraine:"ウクライナ",Kazakhstan:"カザフスタン",Philippines:"フィリピン",America:"アメリカ",UK:"イギリス",Georgia:"ジョージア",Brazil:"ブラジル",Egypt:"エジプト",Bulgaria:"ブルガリア",Estonia:"エストニア",Hungary:"ハンガリー",Korea:"韓国",Taiwan:"台湾",Tonga:"トンガ",Kyrgyzstan:"キルギス",Nepal:"ネパール",Indonesia:"インドネシア",Argentina:"アルゼンチン"};
+const KIM={tsukidashi:"突き出し",tsukitaoshi:"突き倒し",oshidashi:"押し出し",oshitaoshi:"押し倒し",yorikiri:"寄り切り",yoritaoshi:"寄り倒し",abisetaoshi:"浴びせ倒し",uwatenage:"上手投げ",shitatenage:"下手投げ",kotenage:"小手投げ",sukuinage:"掬い投げ",uwatedashinage:"上手出し投げ",shitatedashinage:"下手出し投げ",koshinage:"腰投げ",kubinage:"首投げ",ipponzeoi:"一本背負い",nichonage:"二丁投げ",yaguranage:"櫓投げ",kakenage:"掛け投げ",tsukaminage:"つかみ投げ",sotogake:"外掛け",uchigake:"内掛け",chongake:"ちょん掛け",kirikaeshi:"切り返し",kawazugake:"河津掛け",kekaeshi:"蹴返し",ketaguri:"蹴手繰り",mitokorozeme:"三所攻め",watashikomi:"渡し込み",nimaigeri:"二枚蹴り",komatasukui:"小股掬い",sotokomata:"外小股",omata:"大股",tsumatori:"褄取り",kozumatori:"小褄取り",ashitori:"足取り",susoharai:"裾払い",susotori:"裾取り",izori:"居反り",tasukizori:"襷反り",shumokuzori:"撞木反り",sototasukizori:"外襷反り",tsutaezori:"伝え反り",kakezori:"掛け反り",tokkurinage:"徳利投げ",uchimuso:"内無双",sotomuso:"外無双",zubuneri:"頭捻り",uwatehineri:"上手捻り",shitatehineri:"下手捻り",amiuchi:"網打ち",sabaori:"鯖折り",harimanage:"波離間投げ",osakate:"大逆手",kainahineri:"腕捻り",gasshohineri:"合掌捻り",tottari:"とったり",sakatottari:"逆とったり",katasukashi:"肩透かし",hatakikomi:"叩き込み",hikiotoshi:"引き落とし",hikkake:"引っ掛け",tsukiotoshi:"突き落とし",makiotoshi:"巻き落とし",okuridashi:"送り出し",okuritaoshi:"送り倒し",okurinage:"送り投げ",okurigake:"送り掛け",okuritsuriotoshi:"送り吊り落とし",okuritsuridashi:"送り吊り出し",okurihikiotoshi:"送り引き落とし",tsuridashi:"吊り出し",tsuriotoshi:"吊り落とし",kimedashi:"極め出し",kimetaoshi:"極め倒し",utchari:"うっちゃり",waridashi:"割り出し",yobimodoshi:"呼び戻し",ushiromotare:"後ろもたれ",isamiashi:"勇み足",koshikudake:"腰砕け",tsukite:"つき手",tsukihiza:"つきひざ",fumidashi:"踏み出し",kubihineri:"首捻り",fusen:"不戦",fusensho:"不戦勝",fusenpai:"不戦敗",hansoku:"反則",sokubiotoshi:"素首落とし",dashinage:"出し投げ",kotehineri:"小手捻り",hikiwake:"引き分け",itamiwake:"痛み分け",yobikaeshi:"呼び返し"};
+
+/* ---------- 部屋の系譜データ ---------- */
+/* 部屋の系譜データ（2026-11-19 調査）
+   出典: 師匠・所在地 = 日本相撲協会公式「相撲部屋のご紹介」(nsk=公式ページID)
+         一門・創設年・独立元 = Wikipedia日本語版「相撲部屋」(2026-11-17更新)および各部屋の記事
+   p = 独立元（部屋創設者が独立したときの所属部屋）。現存しない部屋は st:"def"
+   pt = 系譜をこれ以上遡らない場合の独立元の注記 */
+const ICHIMON=[
+ {k:"出羽海",c:"#b23a2b"},{k:"二所ノ関",c:"#2f6db0"},{k:"時津風",c:"#2e8a57"},{k:"高砂",c:"#a0782a"},{k:"伊勢ヶ濱",c:"#7a4fa3"}
+];
+const HEYA_DATA=[
+/* ---- 出羽海一門 ---- */
+{id:"出羽海",en:"Dewanoumi",ich:"出羽海",sou:1,y:"1862",f:"3代出羽ノ海（幕下・桂川）",m:"出羽海 昭和（前頭2・小城乃花）",loc:"東京都墨田区両国",nsk:47,note:"出羽海一門の本家。長く「分家独立を許さず」の不文律があった"},
+{id:"春日野",en:"Kasugano",ich:"出羽海",p:"出羽海",y:"1925",f:"8代春日野（横綱・栃木山）",m:"春日野 清隆（関脇・栃乃和歌）",loc:"東京都墨田区両国",nsk:44},
+{id:"玉ノ井",en:"Tamanoi",ich:"出羽海",p:"春日野",y:"1990",f:"13代玉ノ井（関脇・栃東）",m:"玉ノ井 太祐（大関・栃東）",loc:"東京都足立区",nsk:45},
+{id:"雷",en:"Ikazuchi",ich:"出羽海",p:"春日野",y:"1993",f:"16代入間川（関脇・栃司）",m:"雷 徹（小結・垣添）",loc:"東京都墨田区",nsk:10015,old:"入間川部屋（〜2023年1月）",note:"明治の「雷一門」の雷部屋とは別系統"},
+{id:"三保ヶ関(旧)",ich:"出羽海",st:"def",p:"出羽海",y:"1950",close:"2013",f:"9代三保ヶ関（大関・増位山）",note:"1950年に出羽海部屋から再興。2013年閉鎖（春日野部屋へ）"},
+{id:"山響",en:"Yamahibiki",ich:"出羽海",p:"三保ヶ関(旧)",y:"1985",f:"一代北の湖（横綱・北の湖）",m:"山響 謙司（前頭1・巌雄）",loc:"東京都江東区",nsk:10011,old:"北の湖部屋（〜2015年11月）"},
+{id:"木瀬",en:"Kise",ich:"出羽海",p:"三保ヶ関(旧)",y:"2003",f:"11代木村瀬平（前頭1・肥後ノ海）",m:"木村 瀬平（前頭1・肥後ノ海）",loc:"東京都墨田区",nsk:57,note:"2010〜2012年に一時閉鎖処分"},
+{id:"尾上",en:"Onoe",ich:"出羽海",p:"三保ヶ関(旧)",y:"2006",f:"17代尾上（小結・濱ノ嶋）",m:"尾上 圭志（小結・濱ノ嶋）",loc:"東京都大田区",nsk:10008},
+{id:"藤島",en:"Fujishima",ich:"出羽海",p:"出羽海",y:"1981",f:"14代武蔵川（横綱・三重ノ海）",m:"藤島 武人（大関・武双山）",loc:"東京都荒川区",nsk:10009,old:"武蔵川部屋（〜2010年9月）",note:"出羽海部屋から62年ぶりの円満独立"},
+{id:"武蔵川",en:"Musashigawa",ich:"出羽海",p:"藤島",y:"2013",f:"15代武蔵川（横綱・武蔵丸）",m:"武蔵川 光偉（横綱・武蔵丸）",loc:"東京都江戸川区",nsk:43},
+{id:"二子山",en:"Futagoyama",ich:"出羽海",p:"藤島",y:"2018",f:"14代二子山（大関・雅山）",m:"二子山 雅高（大関・雅山）",loc:"東京都葛飾区",nsk:28,note:"二所ノ関一門の旧二子山部屋とは別系統"},
+{id:"境川",en:"Sakaigawa",ich:"出羽海",p:"出羽海",y:"1998",f:"12代中立（小結・両国）",m:"境川 豪章（小結・両国）",loc:"東京都足立区",nsk:10003,old:"中立部屋（〜2003年1月）"},
+{id:"武隈",en:"Takekuma",ich:"出羽海",p:"境川",y:"2022",f:"14代武隈（大関・豪栄道）",m:"武隈 豪太郎（大関・豪栄道）",loc:"東京都大田区",nsk:53},
+{id:"立浪",en:"Tatsunami",ich:"出羽海",pt:"春日山部屋（旧）",y:"1915",f:"4代立浪（小結・緑嶌）",m:"立浪 耐治（小結・旭豊）",loc:"東京都台東区",nsk:1,note:"一門の移動：伊勢ヶ濱一門（立浪・伊勢ヶ濱連合）→貴乃花一門→無所属→2018年に出羽海一門"},
+{id:"式秀",en:"Shikihide",ich:"出羽海",p:"時津風",y:"1992",f:"9代式守秀五郎（小結・大潮）",m:"式守 秀五郎（前頭9・北桜）",loc:"茨城県龍ヶ崎市",nsk:17,note:"時津風部屋から独立。2013年の師匠交代で時津風一門→出羽海一門"},
+/* ---- 二所ノ関一門 ---- */
+{id:"二所ノ関(旧)",ich:"二所ノ関",st:"def",close:"2013",note:"二所ノ関一門の旧本家。2013年1月に所属力士0人で閉鎖"},
+{id:"佐渡ヶ嶽",en:"Sadogatake",ich:"二所ノ関",p:"二所ノ関(旧)",y:"1955",f:"11代佐渡ヶ嶽（小結・琴錦）",m:"佐渡ヶ嶽 満宗（関脇・琴ノ若）",loc:"千葉県松戸市",nsk:27},
+{id:"尾車(旧)",ich:"二所ノ関",st:"def",p:"佐渡ヶ嶽",y:"1987",close:"2022",f:"8代尾車（大関・琴風）",note:"2022年2月閉鎖（押尾川部屋・二所ノ関部屋へ）"},
+{id:"押尾川",en:"Oshiogawa",ich:"二所ノ関",p:"尾車(旧)",y:"2022",f:"22代押尾川（関脇・豪風）",m:"押尾川 旭（関脇・豪風）",loc:"東京都墨田区",nsk:29},
+{id:"鳴戸",en:"Naruto",ich:"二所ノ関",p:"佐渡ヶ嶽",y:"2017",f:"15代鳴戸（大関・琴欧洲）",m:"鳴戸 勝紀（大関・琴欧洲）",loc:"東京都墨田区",nsk:36},
+{id:"秀ノ山",en:"Hidenoyama",ich:"二所ノ関",p:"佐渡ヶ嶽",y:"2024",f:"14代秀ノ山（大関・琴奨菊）",m:"秀ノ山 和弘（大関・琴奨菊）",loc:"東京都墨田区",nsk:10017},
+{id:"片男波",en:"Kataonami",ich:"二所ノ関",p:"二所ノ関(旧)",y:"1961",f:"12代片男波（関脇・玉乃海）",m:"片男波 良二（関脇・玉春日）",loc:"東京都墨田区",nsk:37},
+{id:"大嶽",en:"Otake",ich:"二所ノ関",p:"二所ノ関(旧)",y:"1971",f:"一代大鵬（横綱・大鵬）",m:"大嶽 大輔（前頭9・玉飛鳥）",loc:"東京都江東区",nsk:10004,old:"大鵬部屋（〜2003年）",note:"一門の移動：二所ノ関→貴乃花一門→2018年に二所ノ関一門へ復帰"},
+{id:"阿武松",en:"Onomatsu",ich:"二所ノ関",p:"大嶽",y:"1994",f:"12代阿武松（関脇・益荒雄）",m:"阿武松 健二（前頭8・大道）",loc:"千葉県習志野市",nsk:40,note:"押尾川部屋（旧）を破門同然で離れ、大鵬部屋を経て独立"},
+{id:"花籠(旧)",ich:"二所ノ関",st:"def",p:"二所ノ関(旧)",y:"1952",close:"1985",f:"大ノ海（前頭・大ノ海）",note:"芝田山部屋として創設し、1953年に花籠部屋へ改称。阿佐ヶ谷勢の本家"},
+{id:"放駒(旧)",ich:"二所ノ関",st:"def",p:"花籠(旧)",y:"1981",close:"2013",f:"17代放駒（大関・魁傑）",note:"2013年閉鎖（芝田山部屋へ）"},
+{id:"芝田山",en:"Shibatayama",ich:"二所ノ関",p:"放駒(旧)",y:"1999",f:"12代芝田山（横綱・大乃国）",m:"芝田山 康（横綱・大乃国）",loc:"東京都杉並区",nsk:54},
+{id:"二子山(旧)",ich:"二所ノ関",st:"def",p:"花籠(旧)",y:"1962",close:"1993",f:"10代二子山（横綱・初代若乃花）",note:"1993年に藤島部屋（貴ノ花）と合併し、のち貴乃花部屋へ"},
+{id:"放駒",en:"Hanaregoma",ich:"二所ノ関",p:"二子山(旧)",y:"1990",f:"9代松ヶ根（大関・若嶋津）",m:"放駒 新（関脇・玉乃島）",loc:"東京都足立区",nsk:31,old:"松ヶ根部屋（〜2014年）→二所ノ関部屋（〜2021年12月）"},
+{id:"田子ノ浦",en:"Tagonoura",ich:"二所ノ関",p:"二子山(旧)",y:"1989",f:"13代鳴戸（横綱・隆の里）",m:"田子ノ浦 伸一（前頭8・隆の鶴）",loc:"東京都江戸川区",nsk:55,old:"鳴戸部屋（〜2013年12月）"},
+{id:"西岩",en:"Nishiiwa",ich:"二所ノ関",p:"田子ノ浦",y:"2018",f:"12代西岩（関脇・若の里）",m:"西岩 忍（関脇・若の里）",loc:"東京都台東区",nsk:10013},
+{id:"二所ノ関",en:"Nishonoseki",ich:"二所ノ関",sou:1,p:"田子ノ浦",y:"2021",f:"16代荒磯（横綱・稀勢の里）",m:"二所ノ関 寛（横綱・稀勢の里）",loc:"茨城県阿見町",nsk:32,old:"荒磯部屋（〜2021年12月）"},
+{id:"中村",en:"Nakamura",ich:"二所ノ関",p:"二所ノ関",y:"2024",f:"13代中村（関脇・嘉風）",m:"中村 雅継（関脇・嘉風）",loc:"東京都墨田区",nsk:23,note:"入門は尾車部屋（旧）。尾車部屋閉鎖後に二所ノ関部屋を経て独立"},
+{id:"高田川",en:"Takadagawa",ich:"二所ノ関",p:"高砂",y:"1974",f:"8代高田川（大関・前の山）",m:"高田川 勝巳（関脇・安芸乃島）",loc:"東京都江東区",nsk:22,note:"高砂部屋から独立。高砂一門→無所属（1998年）→2011年に二所ノ関一門"},
+{id:"湊川",en:"Minatogawa",ich:"二所ノ関",p:"春日野",y:"2004",f:"19代千賀ノ浦（関脇・舛田山）",m:"湊川 貴信（大関・貴景勝）",loc:"東京都板橋区",nsk:10018,old:"千賀ノ浦部屋（〜2020年11月）→常盤山部屋（〜2026年1月）",note:"春日野部屋から独立。出羽海一門→貴乃花一門→2018年に二所ノ関一門"},
+{id:"湊",en:"Minato",ich:"二所ノ関",p:"時津風",y:"1982",f:"22代湊（小結・豊山）",m:"湊 孝行（前頭2・湊富士）",loc:"埼玉県川口市",nsk:16,note:"時津風部屋から独立。時津風一門→無所属（2017年）→2018年に二所ノ関一門"},
+{id:"井筒(旧)",ich:"時津風",st:"def",p:"時津風",y:"1947",close:"2019",f:"11代井筒（関脇・鶴ヶ嶺）",note:"2019年に師匠急逝で閉鎖（陸奥部屋へ）"},
+{id:"錣山",en:"Shikoroyama",ich:"二所ノ関",p:"井筒(旧)",y:"2004",f:"20代錣山（関脇・寺尾）",m:"錣山 矩幸（小結・豊真将）",loc:"東京都江東区",nsk:10005,note:"井筒部屋から独立。時津風一門→無所属（2017年）→2018年に二所ノ関一門"},
+/* ---- 時津風一門 ---- */
+{id:"伊勢ノ海",en:"Isenoumi",ich:"時津風",y:"1757以前",f:"不明",m:"伊勢ノ海 準人（前頭3・北勝鬨）",loc:"東京都文京区",nsk:14,note:"現存する最古の部屋。1942年に再興"},
+{id:"時津風",en:"Tokitsukaze",ich:"時津風",sou:1,p:"立浪",y:"1941",f:"一代双葉山（横綱・双葉山）",m:"時津風 祐哉（前頭1・土佐豊）",loc:"東京都墨田区両国",nsk:11,old:"双葉山相撲道場（〜1945年）"},
+{id:"荒汐",en:"Arashio",ich:"時津風",p:"時津風",y:"2002",f:"8代荒汐（小結・大豊）",m:"荒汐 栄吉（前頭2・蒼国来）",loc:"東京都中央区",nsk:10001},
+{id:"陸奥(旧)",ich:"時津風",st:"def",close:"2024",note:"2024年4月に師匠の停年で閉鎖（音羽山・荒汐・追手風・伊勢ノ海へ）。2019年に井筒部屋（旧）の力士を受け入れた"},
+{id:"音羽山",en:"Otowayama",ich:"時津風",p:"陸奥(旧)",y:"2023",f:"24代音羽山（横綱・鶴竜）",m:"音羽山 力三郎（横綱・鶴竜）",loc:"東京都墨田区",nsk:10016,note:"入門は井筒部屋（旧）"},
+{id:"追手風",en:"Oitekaze",ich:"時津風",p:"大島",y:"1998",f:"11代追手風（前頭2・大翔山）",m:"追手風 直樹（前頭2・大翔山）",loc:"埼玉県草加市",nsk:52,note:"友綱部屋（現・大島部屋）から独立（大翔山の入門は立浪部屋）。2016年に伊勢ヶ濱一門→時津風一門"},
+/* ---- 高砂一門 ---- */
+{id:"高砂",en:"Takasago",ich:"高砂",sou:1,y:"1878",f:"初代高砂（前頭1・高砂）",m:"高砂 浦五郎（関脇・朝赤龍）",loc:"東京都墨田区",nsk:20,note:"最も古い一門の本家"},
+{id:"錦戸",en:"Nishikido",ich:"高砂",p:"高砂",y:"2002",f:"10代錦戸（関脇・水戸泉）",m:"錦戸 眞幸（関脇・水戸泉）",loc:"東京都墨田区",nsk:10002},
+{id:"九重",en:"Kokonoe",ich:"高砂",p:"出羽海",y:"1967",f:"11代九重（横綱・千代の山）",m:"九重 龍二（大関・千代大海）",loc:"東京都葛飾区",nsk:21,note:"出羽海部屋から独立し一門を破門され、高砂一門へ"},
+{id:"八角",en:"Hakkaku",ich:"高砂",p:"九重",y:"1993",f:"8代八角（横綱・北勝海）",m:"八角 信芳（横綱・北勝海）",loc:"東京都墨田区",nsk:26,note:"師匠は日本相撲協会理事長"},
+/* ---- 伊勢ヶ濱一門 ---- */
+{id:"大島",en:"Oshima",ich:"伊勢ヶ濱",pt:"系譜は高嶋部屋から",y:"1922",f:"8代高嶋（前頭4・八甲山）",m:"大島 勝（関脇・旭天鵬）",loc:"東京都葛飾区",nsk:5,old:"高嶋部屋（〜1961年）→友綱部屋（〜2022年1月）"},
+{id:"伊勢ヶ濱",en:"Isegahama",ich:"伊勢ヶ濱",sou:1,p:"大島",y:"1979",f:"3代安治川（関脇・陸奥嵐）",m:"伊勢ヶ濱 春雄（横綱・照ノ富士）",loc:"東京都墨田区",nsk:3,old:"安治川部屋（〜2007年11月）",note:"友綱部屋（現・大島部屋）から独立。旧・伊勢ヶ濱部屋とは別系統。宮城野部屋（2024年預かり、2026年消滅決定）の力士を受け入れ"},
+{id:"安治川",en:"Ajigawa",ich:"伊勢ヶ濱",p:"伊勢ヶ濱",y:"2022",f:"8代安治川（関脇・安美錦）",m:"安治川 竜児（関脇・安美錦）",loc:"東京都江東区",nsk:8},
+{id:"浅香山",en:"Asakayama",ich:"伊勢ヶ濱",p:"大島",y:"2014",f:"15代浅香山（大関・魁皇）",m:"浅香山 博之（大関・魁皇）",loc:"東京都墨田区",nsk:10010,note:"友綱部屋（現・大島部屋）から独立"},
+{id:"朝日山",en:"Asahiyama",ich:"伊勢ヶ濱",p:"尾車(旧)",y:"2016",f:"19代朝日山（関脇・琴錦）",m:"朝日山 宗功（関脇・琴錦）",loc:"千葉県鎌ケ谷市",nsk:4,note:"尾車部屋から独立（入門は佐渡ヶ嶽部屋）。2017年に二所ノ関一門→伊勢ヶ濱一門"},
+];
+
+const HMAP=Object.fromEntries(HEYA_DATA.map(h=>[h.id,h]));
+const HEN=Object.fromEntries(HEYA_DATA.filter(h=>h.en).map(h=>[h.en,h]));
+const ICOL=Object.fromEntries(ICHIMON.map(i=>[i.k,i.c]));
+const ichOf=en=>HEN[en]?HEN[en].ich:"";
+const ichDot=ich=>ich?`<span class="dot" style="background:${ICOL[ich]}" title="${ich}一門"></span>`:"";
+const heyaLink=en=>HEN[en]?`<a class="rk" href="#heya-${en}">${esc(HEN[en].id)}</a>`:esc(heya(en));
+/* ---------- utils ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const kim=k=>k?(KIM[k.trim().toLowerCase()]||k):"";
+const heya=h=>HEYA[h]||h||"";
+const pref=s=>{if(!s)return"";const p=s.split(",")[0].trim().replace(/-(ken|to|fu)$/,"");return PREF[p]||p};
+function cleanJp(s,en){if(!s||/[<>]/.test(s))return en||"";return s.split(/[\s　(（]/)[0]||en||""}
+function parseRank(r){if(!r)return null;const m=r.match(/^(\w+)\s*(\d+)?\s*(East|West)?/);if(!m||!RANK[m[1]])return{full:r,short:r,val:99999,div:""};const [full,sh,ord]=RANK[m[1]];const n=+(m[2]||1);const side=m[3]==="West"?"西":m[3]==="East"?"東":"";const sanyaku=ord<=4;return{full:(side)+full+(sanyaku?"":n+"枚目"),short:sanyaku?full:sh+n,side,val:ord*1000+n*2+(m[3]==="West"?1:0),ord,num:n}}
+function bashoName(id){id=String(id);return id.slice(0,4)+"年"+(BASHO_NAME[id.slice(4,6)]||id.slice(4,6)+"月")}
+function age(d){if(!d)return"";const b=new Date(d),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a}
+const ymd=d=>d?d.slice(0,10):"";
+const ym=s=>s?s.slice(0,4)+"-"+s.slice(4,6):"";
+
+/* cache (localStorage, TTL) */
+const mem=new Map();
+async function api(path,ttl=300){
+  const key="sumo:"+path;
+  if(mem.has(key)){const m=mem.get(key);if(Date.now()-m.t<ttl*1000)return m.v}
+  try{const c=JSON.parse(localStorage.getItem(key)||"null");if(c&&Date.now()-c.t<ttl*1000){mem.set(key,c);return c.v}}catch(e){}
+  let lastErr;
+  for(let i=0;i<3;i++){
+    try{const r=await fetch(API+path);if(!r.ok)throw new Error("HTTP "+r.status);const v=await r.json();const e={t:Date.now(),v};mem.set(key,e);try{localStorage.setItem(key,JSON.stringify(e))}catch(_){try{for(const k of Object.keys(localStorage))if(k.startsWith("sumo:"))localStorage.removeItem(k)}catch(__){}}return v}
+    catch(e){lastErr=e;await new Promise(r=>setTimeout(r,600*(i+1)))}
+  }
+  throw lastErr;
+}
+async function pool(items,fn,c=6){const out=new Array(items.length);let i=0;await Promise.all([...Array(Math.min(c,items.length))].map(async()=>{while(i<items.length){const k=i++;try{out[k]=await fn(items[k])}catch(e){out[k]=null}}}));return out}
+
+/* current basho */
+function bashoCandidates(n=24){const d=new Date(Date.now()+9*3600e3);let y=d.getUTCFullYear(),m=d.getUTCMonth()+1;if(m%2===0)m--;const out=[];for(let i=0;i<n;i++){out.push(y+String(m).padStart(2,"0"));m-=2;if(m<1){m+=12;y--}}return out}
+let CUR=null;
+async function currentBasho(){if(CUR)return CUR;for(const b of bashoCandidates(3)){try{const z=await api(`/basho/${b}/banzuke/Makuuchi`,600);if(z&&z.east&&z.east.length){CUR=b;return b}}catch(e){}}CUR=bashoCandidates(2)[1];return CUR}
+function bashoTTL(b){return b===CUR?300:86400}
+
+/* record helpers */
+function recOf(rec,sekitori){let w=0,l=0,a=0;for(const r of rec||[]){const s=r.result||"";if(s==="win"||s==="fusen win")w++;else if(s==="loss"||s==="fusen loss")l++;else if(s==="absent"&&sekitori)a++}return{w,l,a,txt:w+"-"+l+(a?"-"+a:"")}}
+const recHtml=o=>`<span class="${o.w>o.l?"w":o.l>o.w?"l":""}">${o.txt}</span>`;
+function dayFromRecord(rec){let d=0;rec.forEach((r,i)=>{if(/^(fusen )?(win|loss)$/.test(r.result||""))d=i+1});return d}
+
+/* name map for current basho (id -> jp shikona) */
+const NAMES={};
+function addNames(list){for(const r of list||[]){const id=r.rikishiID??r.id;if(id!=null&&!NAMES[id])NAMES[id]=cleanJp(r.shikonaJp,r.shikonaEn)}}
+async function loadAllRikishi(){const z=await api("/rikishis?intai=false&limit=1000",3600);addNames(z.records);return z.records}
+const nm=(id,en)=>NAMES[id]||en||"?";
+const link=(id,en)=>`<a class="rk" href="#r-${id}">${esc(nm(id,en))}</a>`;
+
+/* ---------- router ---------- */
+const app=$("#app");
+function setNav(k){document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("on",a.dataset.k===k))}
+let token=0;
+async function route(){
+  const h=decodeURIComponent(location.hash.slice(1))||"banzuke";const my=++token;
+  app.innerHTML='<div class="loading">読み込み中…</div>';window.scrollTo(0,0);
+  try{
+    let m;
+    if((m=h.match(/^r-(\d+)$/))){setNav("rikishi");await viewRikishi(+m[1],my)}
+    else if(h.startsWith("rikishi")){setNav("rikishi");await viewList(my)}
+    else if((m=h.match(/^heya-(\w+)$/))){setNav("heya");await viewHeyaDetail(m[1],my)}
+    else if(h.startsWith("heya")){setNav("heya");await viewHeya(my)}
+    else if((m=h.match(/^day(?:-(\d{6}))?(?:-(\d+))?(?:-(\w+))?$/))){setNav("day");await viewDay(m[1],m[2],m[3],my)}
+    else{m=h.match(/^banzuke(?:-(\d{6}))?(?:-(\w+))?$/)||[];setNav("banzuke");await viewBanzuke(m[1],m[2],my)}
+  }catch(e){if(my===token)app.innerHTML=`<div class="err">データを取得できませんでした（${esc(e.message)}）。少し時間をおいて再読み込みしてください。</div>`}
+}
+window.addEventListener("hashchange",route);
+const live=my=>my===token;
+
+/* ---------- 番付 ---------- */
+async function viewBanzuke(basho,div,my){
+  const cur=await currentBasho();basho=basho||cur;div=DIVJP[div]?div:"Makuuchi";
+  const opts=bashoCandidates(36).filter(b=>b<=cur).map(b=>`<option value="${b}"${b===basho?" selected":""}>${bashoName(b)}</option>`).join("");
+  const z=await api(`/basho/${basho}/banzuke/${div}`,bashoTTL(basho));if(!live(my))return;
+  const E=z.east||[],W=z.west||[];addNames(E);addNames(W);
+  const sek=div==="Makuuchi"||div==="Juryo";
+  const rows=new Map();
+  for(const r of [...E,...W]){const p=parseRank(r.rank);const k=(p.ord<=4&&div==="Makuuchi")?p.ord*100+p.num:1000+p.num;if(!rows.has(k))rows.set(k,{k,label:"",E:null,W:null});const row=rows.get(k);row.label=p.ord<=4?RANK[r.rank.split(" ")[0]][0]+(p.num>1?p.num:""):RANK[r.rank.split(" ")[0]][1]+p.num;row[r.side==="West"?"W":"E"]=r}
+  const sorted=[...rows.values()].sort((a,b)=>a.k-b.k);
+  let day=0;for(const r of E)day=Math.max(day,dayFromRecord(r.record||[]));
+  app.innerHTML=`<h1>${bashoName(basho)} 番付</h1>
+  <div class="ctrl"><select id="bsel">${opts}</select><span class="muted">${day?day+"日目まで反映":"場所前"}</span></div>
+  <div class="tabs">${DIVS.map(([k,j])=>`<button data-d="${k}" class="${k===div?"on":""}">${j}</button>`).join("")}</div>
+  <div class="card scroll"><table><thead><tr><th class="c">成績</th><th class="r">東</th><th class="c">番付</th><th>西</th><th class="c">成績</th></tr></thead><tbody id="btb">
+  ${sorted.map(row=>{const cell=(r,side)=>{if(!r)return side==="E"?'<td></td><td></td>':'<td></td><td></td>';const rc=recOf(r.record,sek);const nmh=`<span class="hd" data-id="${r.rikishiID}"></span>${link(r.rikishiID,r.shikonaEn)}<span class="tg" data-id="${r.rikishiID}"></span>`;return side==="E"?`<td class="c">${recHtml(rc)}</td><td class="r">${nmh}</td>`:`<td>${nmh}</td><td class="c">${recHtml(rc)}</td>`};return`<tr>${cell(row.E,"E")}<td class="c muted">${row.label}</td>${cell(row.W,"W")}</tr>`}).join("")}
+  </tbody></table></div>
+  <p class="muted">${ICHIMON.map(i=>ichDot(i.k)+i.k).join("　")}（色は現在の所属部屋の一門）<br>${sek?"成績は 勝-敗-休。":"成績は 勝-敗。"}${sek?"印（新入幕・再入幕・新十両・再十両・自己最高位・休場）は番付履歴から算出。":""}</p>`;
+  $("#bsel").onchange=e=>location.hash=`banzuke-${e.target.value}-${div}`;
+  document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>location.hash=`banzuke-${basho}-${b.dataset.d}`);
+  loadAllRikishi().then(list=>{if(!live(my))return;const hm=Object.fromEntries(list.map(r=>[r.id,r.heya]));document.querySelectorAll(".hd").forEach(e=>e.innerHTML=ichDot(ichOf(hm[e.dataset.id])))}).catch(()=>{});
+  if(sek){
+    const all=[...E,...W];
+    const tag=(id,html)=>{const el=document.querySelector(`.tg[data-id="${id}"]`);if(el)el.innerHTML+=html};
+    for(const r of all)if((r.record||[]).some(x=>x.result==="absent"))tag(r.rikishiID,'<span class="tag">休場</span>');
+    await pool(all,async r=>{const d=await api(`/rikishi/${r.rikishiID}?ranks=true`,86400);if(!live(my))return;const hist=(d.rankHistory||[]).filter(x=>x.bashoId<basho);const curv=parseRank(r.rank);const prevVals=hist.map(x=>parseRank(x.rank));
+      const inDiv=v=>div==="Makuuchi"?v.ord<=5:v.ord===6;
+      const last=hist.sort((a,b)=>b.bashoId.localeCompare(a.bashoId))[0];
+      const prevIn=last&&inDiv(parseRank(last.rank));const ever=prevVals.some(inDiv);
+      if(!prevIn){if(!ever)tag(r.rikishiID,`<span class="tag hot">${div==="Makuuchi"?"新入幕":"新十両"}</span>`);else tag(r.rikishiID,`<span class="tag">${div==="Makuuchi"?"再入幕":"再十両"}</span>`)}
+      if(prevVals.length&&curv.val<Math.min(...prevVals.map(v=>v.val))&&prevIn)tag(r.rikishiID,'<span class="tag hot">自己最高位</span>');
+    },6);
+  }
+}
+
+/* ---------- 取組結果 ---------- */
+async function viewDay(basho,day,div,my){
+  const cur=await currentBasho();basho=basho||cur;div=DIVJP[div]?div:"Makuuchi";
+  const bz=await api(`/basho/${basho}/banzuke/Makuuchi`,bashoTTL(basho));if(!live(my))return;
+  addNames(bz.east);addNames(bz.west);
+  let maxDay=0;for(const r of bz.east||[])maxDay=Math.max(maxDay,dayFromRecord(r.record||[]));
+  day=+(day||Math.max(1,maxDay));
+  if(div!=="Makuuchi"){const z=await api(`/basho/${basho}/banzuke/${div}`,bashoTTL(basho));addNames(z.east);addNames(z.west)}
+  const t=await api(`/basho/${basho}/torikumi/${div}/${day}`,bashoTTL(basho));if(!live(my))return;
+  const tk=(t.torikumi||[]).slice().sort((a,b)=>a.matchNo-b.matchNo);
+  const opts=bashoCandidates(36).filter(b=>b<=cur).map(b=>`<option value="${b}"${b===basho?" selected":""}>${bashoName(b)}</option>`).join("");
+  const dayBtns=[...Array(15)].map((_,i)=>`<button data-x="${i+1}" class="${i+1===day?"on":""}">${i+1}</button>`).join("");
+  const mark=(id,w)=>!w?"":id===w?'<span class="w">○</span>':'<span class="l">●</span>';
+  /* 優勝争い（幕内） */
+  const all=[...(bz.east||[]),...(bz.west||[])].map(r=>({id:r.rikishiID,en:r.shikonaEn,rank:parseRank(r.rank),rc:recOf(r.record,true)}));
+  const minL=Math.min(...all.map(x=>x.rc.l+x.rc.a));
+  const groups=[0,1,2].map(g=>all.filter(x=>x.rc.l+x.rc.a===minL+g).sort((a,b)=>b.rc.w-a.rc.w||a.rank.val-b.rank.val));
+  app.innerHTML=`<h1>${bashoName(basho)} ${day}日目 ${DIVJP[div]}</h1>
+  <div class="ctrl"><select id="bsel">${opts}</select></div>
+  <div class="tabs" id="days">${dayBtns}</div>
+  <div class="tabs" id="divs">${DIVS.map(([k,j])=>`<button data-d="${k}" class="${k===div?"on":""}">${j}</button>`).join("")}</div>
+  ${tk.length?`<div class="card scroll"><table class="bout"><thead><tr><th class="r">東</th><th></th><th class="c">決まり手</th><th></th><th>西</th></tr></thead><tbody>
+  ${tk.map(x=>{const er=parseRank(x.eastRank),wr=parseRank(x.westRank);return`<tr><td class="r"><span class="muted">${er?er.short:""}</span> ${link(x.eastId,x.eastShikona)}</td><td class="c">${mark(x.eastId,x.winnerId)}</td><td class="mid">${esc(kim(x.kimarite))||(x.winnerId?"":"—")}</td><td class="c">${mark(x.westId,x.winnerId)}</td><td>${link(x.westId,x.westShikona)} <span class="muted">${wr?wr.short:""}</span></td></tr>`}).join("")}
+  </tbody></table></div>`:'<div class="card muted">この日の取組データはありません。</div>'}
+  <h2>幕内 優勝争い（${maxDay}日目終了時点）</h2>
+  <div class="card">${groups.map((g,i)=>g.length?`<div style="margin-bottom:8px"><b>${i===0?"首位":i+"差"}</b>（${g[0].rc.txt}）：${g.slice(0,i===2?12:30).map(x=>`<span class="muted">${x.rank.short}</span> ${link(x.id,x.en)}`).join("、")}${g.length>(i===2?12:30)?` ほか${g.length-(i===2?12:30)}人`:""}</div>`:"").join("")}</div>`;
+  $("#bsel").onchange=e=>location.hash=`day-${e.target.value}-1-${div}`;
+  document.querySelectorAll("#days button").forEach(b=>b.onclick=()=>location.hash=`day-${basho}-${b.dataset.x}-${div}`);
+  document.querySelectorAll("#divs button").forEach(b=>b.onclick=()=>location.hash=`day-${basho}-${day}-${b.dataset.d}`);
+}
+
+/* ---------- 力士一覧 ---------- */
+let LIST_STATE={q:"",heya:"",pref:"",ich:"",sort:"rank",dir:1};
+async function viewList(my){
+  const recs=await loadAllRikishi();if(!live(my))return;
+  const rows=recs.map(r=>({id:r.id,jp:cleanJp(r.shikonaJp,r.shikonaEn),en:r.shikonaEn,heya:heya(r.heya),hen:r.heya,ich:ichOf(r.heya),pref:pref(r.shusshin),birth:ymd(r.birthDate),age:age(r.birthDate),debut:r.debut,h:r.height,w:r.weight,rank:parseRank(r.currentRank)}));
+  const heyas=[...new Set(rows.map(r=>r.heya))].sort((a,b)=>a.localeCompare(b,"ja"));
+  const prefs=[...new Set(rows.map(r=>r.pref))].sort((a,b)=>a.localeCompare(b,"ja"));
+  app.innerHTML=`<h1>力士一覧（現役）</h1>
+  <div class="ctrl"><input id="q" placeholder="四股名で検索（漢字・ローマ字）" value="${esc(LIST_STATE.q)}" style="flex:1;min-width:160px">
+  <select id="fh"><option value="">部屋：すべて</option>${heyas.map(h=>`<option${h===LIST_STATE.heya?" selected":""}>${esc(h)}</option>`).join("")}</select>
+  <select id="fi"><option value="">一門：すべて</option>${ICHIMON.map(i=>`<option value="${i.k}"${i.k===LIST_STATE.ich?" selected":""}>${i.k}一門</option>`).join("")}</select>
+  <select id="fp"><option value="">出身：すべて</option>${prefs.map(h=>`<option${h===LIST_STATE.pref?" selected":""}>${esc(h)}</option>`).join("")}</select></div>
+  <div class="muted" id="cnt"></div>
+  <div class="card scroll"><table><thead><tr>
+  ${[["rank","番付"],["jp","四股名"],["heya","部屋"],["ich","一門"],["pref","出身"],["age","年齢"],["birth","生年月日"],["debut","初土俵"],["h","身長"],["w","体重"]].map(([k,j])=>`<th class="sort" data-k="${k}">${j}</th>`).join("")}
+  </tr></thead><tbody id="tb"></tbody></table></div>`;
+  const draw=()=>{const s=LIST_STATE,q=s.q.trim().toLowerCase();
+    let v=rows.filter(r=>(!q||r.jp.includes(s.q.trim())||r.en.toLowerCase().includes(q))&&(!s.heya||r.heya===s.heya)&&(!s.pref||r.pref===s.pref)&&(!s.ich||r.ich===s.ich));
+    const key={rank:r=>r.rank?r.rank.val:99999,jp:r=>r.en,heya:r=>r.heya,pref:r=>r.pref,ich:r=>r.ich,age:r=>r.birth?-new Date(r.birth):0,birth:r=>r.birth,debut:r=>r.debut,h:r=>r.h,w:r=>r.w}[s.sort];
+    v.sort((a,b)=>{const x=key(a),y=key(b);return(x>y?1:x<y?-1:0)*s.dir});
+    $("#cnt").textContent=v.length+"人";
+    $("#tb").innerHTML=v.map(r=>`<tr><td class="muted">${r.rank?esc(r.rank.full):""}</td><td>${link(r.id,r.en)}</td><td>${heyaLink(r.hen)}</td><td>${ichDot(r.ich)}${esc(r.ich)}</td><td>${esc(r.pref)}</td><td class="r">${r.age}</td><td>${r.birth}</td><td>${ym(r.debut)}</td><td class="r">${r.h||""}</td><td class="r">${r.w||""}</td></tr>`).join("");
+    document.querySelectorAll("th.sort").forEach(th=>th.textContent=th.textContent.replace(/[▲▼]/g,"")+(th.dataset.k===s.sort?(s.dir>0?"▲":"▼"):""));
+  };
+  $("#q").oninput=e=>{LIST_STATE.q=e.target.value;draw()};
+  $("#fh").onchange=e=>{LIST_STATE.heya=e.target.value;draw()};
+  $("#fp").onchange=e=>{LIST_STATE.pref=e.target.value;draw()};
+  $("#fi").onchange=e=>{LIST_STATE.ich=e.target.value;draw()};
+  document.querySelectorAll("th.sort").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(LIST_STATE.sort===k)LIST_STATE.dir*=-1;else{LIST_STATE.sort=k;LIST_STATE.dir=1}draw()});
+  draw();
+}
+
+
+/* ---------- 部屋・一門 ---------- */
+let HEYA_FILTER="";
+const founderOf=h=>{const m=(h.f||"").match(/（(.+?)）/);return m?m[1].split("・").pop():""};
+function chainOf(id){const out=[];let h=HMAP[id],g=0;while(h&&g++<20){out.unshift(h);h=h.p?HMAP[h.p]:null}return out}
+function heyaCounts(list){const c={};for(const r of list){const k=r.heya;const o=c[k]||(c[k]={n:0,seki:0});o.n++;const p=parseRank(r.currentRank);if(p&&p.ord&&p.ord<=6)o.seki++}return c}
+async function viewHeya(my){
+  let list=[];try{list=await loadAllRikishi()}catch(e){}
+  if(!live(my))return;
+  const cnt=heyaCounts(list);
+  const kids={};for(const h of HEYA_DATA)if(h.p)(kids[h.p]||(kids[h.p]=[])).push(h);
+  for(const k in kids)kids[k].sort((a,b)=>String(a.y).localeCompare(String(b.y)));
+  const roots=HEYA_DATA.filter(h=>!h.p).sort((a,b)=>ICHIMON.findIndex(i=>i.k===a.ich)-ICHIMON.findIndex(i=>i.k===b.ich)||String(a.y).localeCompare(String(b.y)));
+  const subtreeHas=(h,ich)=>h.ich===ich||(kids[h.id]||[]).some(c=>subtreeHas(c,ich));
+  const node=h=>{const def=h.st==="def";const c=cnt[h.en]||{n:0,seki:0};const moved=h.p&&HMAP[h.p]&&HMAP[h.p].ich!==h.ich&&!def;
+    const dim=HEYA_FILTER&&h.ich!==HEYA_FILTER?" dim":"";
+    return`<li><span class="node${def?" def":""}${dim}" style="--c:${ICOL[h.ich]||"#999"}">${def?`<b>${esc(h.id.replace("(旧)","（旧）"))}</b>`:`<a href="#heya-${h.en}">${esc(h.id)}</a>`}${h.sou?'<span class="tag hot">一門の本家</span>':""}<span class="sub">${h.y?esc(h.y)+"年":""}${def&&h.close?"〜"+esc(h.close)+"年閉鎖":""}${founderOf(h)?" "+esc(founderOf(h))+"が創設":""}</span>${!def?`<span class="sub">力士${c.n}人${c.seki?"・関取"+c.seki:""}</span>`:""}${moved?`<span class="tag">→${esc(h.ich)}一門</span>`:""}${h.pt?`<span class="sub">（${esc(h.pt)}）</span>`:""}</span>${(kids[h.id]||[]).length?`<ul>${kids[h.id].map(node).join("")}</ul>`:""}</li>`};
+  const shown=roots.filter(r=>!HEYA_FILTER||subtreeHas(r,HEYA_FILTER));
+  const sum=ICHIMON.map(i=>{const hs=HEYA_DATA.filter(h=>h.ich===i.k&&h.st!=="def");const n=hs.reduce((a,h)=>a+(cnt[h.en]||{n:0}).n,0),sk=hs.reduce((a,h)=>a+(cnt[h.en]||{seki:0}).seki,0);const top=hs.find(h=>h.sou);return`<div class="kv" style="--c:${i.c}"><span>${i.k}一門</span><b>${hs.length}部屋</b><span>力士${n}人・関取${sk}人／本家 ${top?esc(top.id):""}部屋</span></div>`}).join("");
+  app.innerHTML=`<h1>部屋の系譜と一門</h1>
+  <div class="ichsum">${sum}</div>
+  <div class="ctrl"><button class="ichip${HEYA_FILTER?"":" on"}" data-i="">すべて</button>${ICHIMON.map(i=>`<button class="ichip${HEYA_FILTER===i.k?" on":""}" data-i="${i.k}"><span class="dot" style="background:${i.c}"></span>${i.k}一門</button>`).join("")}</div>
+  <p class="muted">線は「どの部屋から独立したか」。色は一門（現存部屋は現在の所属、閉鎖済みの部屋は閉鎖時）。点線の枠は閉鎖済みの部屋で、系譜をつなぐために表示しています。「→○○一門」は独立元と一門が異なる部屋。</p>
+  <div class="card scroll"><ul class="tree">${shown.map(node).join("")}</ul></div>
+  <p class="muted">出典：師匠・所在地は日本相撲協会公式サイト「相撲部屋のご紹介」、一門・創設年・独立元はWikipedia日本語版「相撲部屋」（2026年11月17日版）および各部屋の記事（2026年11月19日確認）。力士数はSumo APIの現役力士データから集計。</p>`;
+  document.querySelectorAll(".ichip").forEach(b=>b.onclick=()=>{HEYA_FILTER=b.dataset.i;viewHeya(token)});
+}
+async function viewHeyaDetail(en,my){
+  const h=HEN[en];if(!h){app.innerHTML='<div class="err">部屋が見つかりません。</div>';return}
+  let list=[];try{list=await loadAllRikishi()}catch(e){}
+  if(!live(my))return;
+  const mem=list.filter(r=>r.heya===en).map(r=>({id:r.id,en:r.shikonaEn,rank:parseRank(r.currentRank)})).sort((a,b)=>(a.rank?a.rank.val:99999)-(b.rank?b.rank.val:99999));
+  const chain=chainOf(h.id);
+  const kids=HEYA_DATA.filter(x=>x.p===h.id);
+  const nameOf=x=>x.st==="def"?esc(x.id.replace("(旧)","（旧）")):`<a class="rk" href="#heya-${x.en}">${esc(x.id)}</a>`;
+  const seki=mem.filter(m=>m.rank&&m.rank.ord<=6);
+  app.innerHTML=`<h1>${ichDot(h.ich)}${esc(h.id)}部屋 <span class="muted">${esc(h.ich)}一門${h.sou?"（本家）":""}</span></h1>
+  <div class="card"><div class="grid">
+   <div class="kv"><span>師匠</span><b style="font-size:15px">${esc(h.m||"—")}</b></div>
+   <div class="kv"><span>創設</span><b>${esc(h.y||"—")}年</b><span>${esc(h.f||"")}</span></div>
+   <div class="kv"><span>所在地</span><b style="font-size:15px">${esc(h.loc||"—")}</b></div>
+   <div class="kv"><span>所属力士</span><b>${mem.length}人</b><span>うち関取${seki.length}人</span></div>
+  </div>
+  ${h.old?`<p><b>旧名</b>：${esc(h.old)}</p>`:""}${h.note?`<p><b>備考</b>：${esc(h.note)}</p>`:""}</div>
+  <h2>系譜</h2><div class="card"><div class="chain">${chain[0].pt?`<span class="muted">${esc(chain[0].pt)}</span> →`:""}${chain.map((x,i)=>`${i?"→":""}<span class="node${x.st==="def"?" def":""}" style="--c:${ICOL[x.ich]||"#999"}">${nameOf(x)}<span class="sub">${x.y?esc(x.y)+"年":""}</span></span>`).join(" ")}</div>
+  ${kids.length?`<p style="margin-top:10px"><b>この部屋から独立した部屋</b>：${kids.map(nameOf).join("、")}</p>`:""}
+  <p class="muted"><a href="#heya">系譜全体を見る</a></p></div>
+  <h2>所属力士（現役）</h2><div class="card scroll"><table><thead><tr><th>番付</th><th>四股名</th></tr></thead><tbody>${mem.map(m=>`<tr><td class="muted">${m.rank?esc(m.rank.full):""}</td><td>${link(m.id,m.en)}</td></tr>`).join("")||'<tr><td colspan="2" class="muted">データなし</td></tr>'}</tbody></table></div>
+  <p class="muted">出典：<a href="https://www.sumo.or.jp/ResultRikishiDataSumoBeya/detail/${h.nsk}/" target="_blank" rel="noopener">日本相撲協会 公式ページ</a>／<a href="https://ja.wikipedia.org/wiki/${encodeURIComponent(h.id+"部屋")}" target="_blank" rel="noopener">Wikipedia</a></p>`;
+}
+/* ---------- 力士詳細 ---------- */
+async function viewRikishi(id,my){
+  const [r,st]=await Promise.all([api(`/rikishi/${id}?ranks=true&shikonas=true&measurements=true`,3600),api(`/rikishi/${id}/stats`,3600)]);
+  loadAllRikishi().catch(()=>{});
+  let matches=[],skip=0;
+  while(true){const m=await api(`/rikishi/${id}/matches?limit=1000&skip=${skip}`,600);const rs=m.records||[];matches=matches.concat(rs);if(rs.length<1000)break;skip+=1000}
+  try{await loadAllRikishi()}catch(e){}
+  if(!live(my))return;
+  const jp=cleanJp(r.shikonaJp,r.shikonaEn);NAMES[id]=jp;
+  const ranks=(r.rankHistory||[]).slice().sort((a,b)=>a.bashoId.localeCompare(b.bashoId));
+  const pr=ranks.map(x=>({b:x.bashoId,p:parseRank(x.rank)})).filter(x=>x.p&&x.p.ord);
+  const best=pr.length?pr.reduce((a,b)=>b.p.val<a.p.val?b:a):null;
+  /* 場所別成績 */
+  const byB={};for(const m of matches){const b=m.bashoId;(byB[b]||(byB[b]={w:0,l:0}));if(m.winnerId===id)byB[b].w++;else if(m.winnerId)byB[b].l++}
+  const rankOf=Object.fromEntries(ranks.map(x=>[x.bashoId,parseRank(x.rank)]));
+  const bashoRows=Object.keys({...byB,...rankOf}).sort().reverse();
+  /* 決まり手 */
+  const kw={},kl={};for(const m of matches){if(!m.kimarite||!m.winnerId)continue;const k=kim(m.kimarite);if(m.winnerId===id)kw[k]=(kw[k]||0)+1;else kl[k]=(kl[k]||0)+1}
+  const top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const kTable=(o,cls)=>{const t=top(o),mx=t.length?t[0][1]:1,tot=Object.values(o).reduce((a,b)=>a+b,0)||1;return t.map(([k,n])=>`<tr><td>${esc(k)}</td><td style="width:45%"><div class="bar" style="width:${n/mx*100}%;${cls==="l"?"background:var(--sub)":""}"></div></td><td class="r">${n}</td><td class="r muted">${(n/tot*100).toFixed(0)}%</td></tr>`).join("")};
+  /* 対戦成績 */
+  const h2h={};for(const m of matches){const opp=m.eastId===id?m.westId:m.eastId;const oen=m.eastId===id?m.westShikona:m.eastShikona;const o=h2h[opp]||(h2h[opp]={id:opp,en:oen,w:0,l:0,last:null});if(m.winnerId===id)o.w++;else if(m.winnerId)o.l++;const key=m.bashoId+String(m.day).padStart(2,"0");if(!o.last||key>o.last.key)o.last={key,b:m.bashoId,d:m.day,win:m.winnerId===id,k:kim(m.kimarite)}}
+  const h2hRows=Object.values(h2h).sort((a,b)=>(b.w+b.l)-(a.w+a.l)||b.last.key.localeCompare(a.last.key));
+  const recent=matches.slice().sort((a,b)=>(b.bashoId+String(b.day).padStart(2,"0")).localeCompare(a.bashoId+String(a.day).padStart(2,"0"))).slice(0,15);
+  const sansho=st.sansho||{};const sanshoTxt=[["Shukun-sho","殊勲賞"],["Kanto-sho","敢闘賞"],["Gino-sho","技能賞"]].map(([k,j])=>sansho[k]?j+sansho[k]:"").filter(Boolean).join("・")||"なし";
+  const yushoTxt=st.yushoByDivision?Object.entries(st.yushoByDivision).filter(([,n])=>n).map(([d,n])=>(DIVJP[d]||d)+n).join("・"):"";
+  const mk=st.winsByDivision&&st.winsByDivision.Makuuchi!=null?`${st.winsByDivision.Makuuchi||0}勝${(st.lossByDivision||{}).Makuuchi||0}敗${(st.absenceByDivision||{}).Makuuchi?((st.absenceByDivision||{}).Makuuchi)+"休":""}`:"—";
+  const cur=parseRank(r.currentRank);
+  app.innerHTML=`<h1>${esc(jp)} <span class="muted">${esc(r.shikonaEn)}</span></h1>
+  <div class="card"><div class="grid">
+   <div class="kv"><span>現番付</span><b>${cur?esc(cur.full):"—"}</b></div>
+   <div class="kv"><span>最高位</span><b>${best?esc(best.p.full.replace(/^[東西]/,"")):"—"}</b><span>${best?bashoName(best.b):""}</span></div>
+   <div class="kv"><span>部屋・一門</span><b>${heyaLink(r.heya)}</b><span>${ichDot(ichOf(r.heya))}${ichOf(r.heya)?ichOf(r.heya)+"一門":""}</span></div>
+   <div class="kv"><span>出身</span><b>${esc(pref(r.shusshin))}</b></div>
+   <div class="kv"><span>生年月日</span><b>${ymd(r.birthDate)}</b><span>${age(r.birthDate)}歳</span></div>
+   <div class="kv"><span>初土俵</span><b>${ym(r.debut)}</b></div>
+   <div class="kv"><span>身長・体重</span><b>${r.height||"—"}cm / ${r.weight||"—"}kg</b></div>
+   <div class="kv"><span>通算成績</span><b>${st.totalWins||0}勝${st.totalLosses||0}敗${st.totalAbsences?st.totalAbsences+"休":""}</b><span>${st.basho||0}場所</span></div>
+   <div class="kv"><span>幕内成績</span><b>${mk}</b></div>
+   <div class="kv"><span>優勝</span><b>${yushoTxt||"なし"}</b></div>
+   <div class="kv"><span>三賞</span><b style="font-size:14px">${sanshoTxt}</b></div>
+  </div></div>
+  <h2>番付推移</h2><div class="card scroll">${rankChart(pr)}</div>
+  <h2>直近の取組</h2><div class="card scroll"><table><thead><tr><th>場所</th><th class="c">日</th><th class="c"></th><th>相手</th><th>決まり手</th></tr></thead><tbody>
+  ${recent.map(m=>{const opp=m.eastId===id?m.westId:m.eastId,oen=m.eastId===id?m.westShikona:m.eastShikona;const res=!m.winnerId?"":m.winnerId===id?'<span class="w">○</span>':'<span class="l">●</span>';return`<tr><td class="muted">${bashoName(m.bashoId)}</td><td class="c">${m.day}</td><td class="c">${res}</td><td>${link(opp,oen)}</td><td>${esc(kim(m.kimarite))}</td></tr>`}).join("")||'<tr><td colspan="5" class="muted">データなし</td></tr>'}
+  </tbody></table></div>
+  <h2>場所別成績</h2><div class="card scroll" style="max-height:420px;overflow:auto"><table><thead><tr><th>場所</th><th>番付</th><th class="c">成績</th></tr></thead><tbody>
+  ${bashoRows.map(b=>{const x=byB[b]||{w:0,l:0};const p=rankOf[b];return`<tr><td>${bashoName(b)}</td><td>${p?esc(p.full):""}</td><td class="c"><span class="${x.w>x.l?"w":x.l>x.w?"l":""}">${x.w}-${x.l}</span></td></tr>`}).join("")}
+  </tbody></table></div>
+  <p class="muted">場所別成績は取組データからの集計（不戦勝・不戦敗を含み、休場は含まない）。</p>
+  <h2>決まり手</h2><div class="card scroll" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+   <div><b>勝ち</b><table>${kTable(kw,"w")}</table></div><div><b>負け</b><table>${kTable(kl,"l")}</table></div></div>
+  <h2>対戦成績</h2>
+  <div class="ctrl"><input id="hq" placeholder="相手の四股名で絞り込み" style="flex:1;min-width:160px"></div>
+  <div class="card scroll" style="max-height:520px;overflow:auto"><table><thead><tr><th>相手</th><th class="c">勝</th><th class="c">敗</th><th>最新の対戦</th></tr></thead><tbody id="h2h"></tbody></table></div>`;
+  const drawH=q=>{q=(q||"").trim().toLowerCase();$("#h2h").innerHTML=h2hRows.filter(o=>!q||nm(o.id,o.en).includes(q)||(o.en||"").toLowerCase().includes(q)).slice(0,300).map(o=>`<tr><td>${link(o.id,o.en)}</td><td class="c w">${o.w}</td><td class="c l">${o.l}</td><td class="muted">${bashoName(o.last.b)}${o.last.d}日目 ${o.last.win?"○":"●"} ${esc(o.last.k)}</td></tr>`).join("")};
+  $("#hq").oninput=e=>drawH(e.target.value);drawH("");
+}
+function rankChart(pr){
+  if(pr.length<2)return'<div class="muted">データ不足</div>';
+  /* y: 番付を連続値に（各階級の帯を固定幅で配置） */
+  const band={1:0,2:1,3:2,4:3,5:4,6:7,7:9,8:12,9:15,10:18};const span={5:3,6:2,7:3,8:3,9:3,10:2};const maxN={5:17,6:14,7:60,8:100,9:110,10:30};
+  const y=p=>{const b=band[p.ord];if(p.ord<=4)return b+(p.val%2)*0.3;return b+Math.min(1,(p.num-1)/maxN[p.ord])*span[p.ord]};
+  const W=Math.max(600,pr.length*14),H=260,pl=48,pt=10,pb=24,ys=v=>pt+v/20*(H-pt-pb),xs=i=>pl+i*(W-pl-10)/(pr.length-1);
+  const labels=[[0,"横綱"],[1,"大関"],[2,"関脇"],[3,"小結"],[4,"前頭"],[7,"十両"],[9,"幕下"],[12,"三段目"],[15,"序二段"],[18,"序ノ口"]];
+  const minY=Math.min(...pr.map(x=>y(x.p))),maxY=Math.max(...pr.map(x=>y(x.p)));
+  const pts=pr.map((x,i)=>`${xs(i).toFixed(1)},${ys(y(x.p)).toFixed(1)}`).join(" ");
+  const years=pr.map((x,i)=>x.b.endsWith("01")?`<text x="${xs(i)}" y="${H-6}" text-anchor="middle">${x.b.slice(0,4)}</text><line x1="${xs(i)}" x2="${xs(i)}" y1="${pt}" y2="${H-pb}" stroke="var(--line)"/>`:"").join("");
+  return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  ${labels.map(([v,t])=>`<line x1="${pl}" x2="${W-10}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" ${v===7?'stroke-width="2"':""}/><text x="4" y="${ys(v)+3}">${t}</text>`).join("")}
+  ${years}<polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+  ${pr.map((x,i)=>`<circle cx="${xs(i)}" cy="${ys(y(x.p))}" r="2.5" fill="var(--accent)"><title>${bashoName(x.b)} ${x.p.full}</title></circle>`).join("")}
+  </svg>`;
+}
+route();
+</script>
+</body>
+</html>
