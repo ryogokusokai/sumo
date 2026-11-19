@@ -37,7 +37,7 @@ async function buildNews(basho,D){
     const unbeaten=a.lead.filter(o=>o.s.l===0&&o.s.a===0),unbeatenB=b.lead.filter(o=>o.s.l===0&&o.s.a===0);
     let t=`${dj}は${leadTxt}が${nwRec(a.lead[0].s)}で`;
     if(ln===1){const id=a.lead[0].r.id;t+=b.lead.length===1&&wasLead.has(id)?"単独首位を守りました。":wasLead.has(id)?"単独首位に立ちました。":"単独首位に浮上しました。"}
-    else t+=`${ln}人で首位に並んでいます。`;
+    else t+=ln>=4?`首位に${ln}人が並んでいます。`:"首位に並んでいます。";
     if(unbeatenB.length&&!unbeaten.length)t+=`全勝が消えました（${unbeatenB.map(o=>nwL(o.r)).join("・")}に初黒星）。`;
     else if(unbeaten.length)t+="全勝を守っています。";
     add("優勝争い",base,t);
