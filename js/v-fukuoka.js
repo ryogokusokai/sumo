@@ -1,5 +1,5 @@
 "use strict";
-/* ---------- 福岡出身力士：番付推移チャート ----------
+/* ---------- 出身・部屋別：番付推移チャート ----------
    縦＝番付（段ごとの帯、上ほど上位）、横＝場所。力士ごとの折れ線と、最新場所の位置に名前ラベル。
    線・ラベルに乗せる（スマホはタップ）とその力士だけ強調。 */
 const FK={range:"ms",span:12};
@@ -16,10 +16,31 @@ function fkPos(rk){if(!rk||!rk.ord)return null;const b=FK_BANDS.findIndex(x=>x.o
   let s=rk.ord<=4?rk.ord-1:rk.ord===5?3+rk.num:rk.num;if(rk.ord>=6)s=rk.num-1;return{b,s:s+(rk.side==="西"?.5:0)}}
 function fkShort(rk){return rk?rk.short:""}
 
-async function viewFukuoka(my){
+/* 条件（出身・部屋）を #origin?pref=福岡&heya=Isegahama の形でURLに持つ */
+function ogParse(h){const q=new URLSearchParams((h.split("?")[1])||"");return{pref:q.get("pref")||"",heya:q.get("heya")||""}}
+function ogHash(c){const q=new URLSearchParams();if(c.pref)q.set("pref",c.pref);if(c.heya)q.set("heya",c.heya);const t=q.toString();return"origin"+(t?"?"+t:"")}
+const OG_WARN=60;
+
+async function viewOrigin(cond,my){
   const all=await loadAllRikishi();if(!live(my))return;
-  const fk=all.filter(r=>pref(r.shusshin)==="福岡");
-  render(`<h1>福岡出身力士</h1><div class="card muted">${fk.length}人の番付履歴を読み込み中…</div>`);
+  const JPN=Object.values(PREF).slice(0,47);
+  const usedP=new Set(all.map(r=>pref(r.shusshin)).filter(Boolean));
+  const prefsF=[...usedP].filter(p=>!JPN.includes(p)).sort((a,b)=>a.localeCompare(b,"ja")),prefsJ=JPN.filter(p=>usedP.has(p));
+  const heyas=[...new Set(all.map(r=>r.heya).filter(Boolean))].map(en=>[en,heya(en)]).sort((a,b)=>a[1].localeCompare(b[1],"ja"));
+  const cnt=c=>all.filter(r=>(!c.pref||pref(r.shusshin)===c.pref)&&(!c.heya||r.heya===c.heya)).length;
+  const optP=`<option value="">出身：指定なし</option>${[["日本（北から）",prefsJ],["海外",prefsF]].map(([g,a])=>`<optgroup label="${g}">${a.map(x=>`<option value="${esc(x)}"${x===cond.pref?" selected":""}>${esc(x)}（${cnt({pref:x,heya:cond.heya})}）</option>`).join("")}</optgroup>`).join("")}`;
+  const optH=`<option value="">部屋：指定なし</option>${heyas.map(([en,j])=>`<option value="${esc(en)}"${en===cond.heya?" selected":""}>${esc(j)}（${cnt({pref:cond.pref,heya:en})}）</option>`).join("")}`;
+  const label=[cond.pref&&`${cond.pref}出身`,cond.heya&&`${heya(cond.heya)}部屋`].filter(Boolean).join("・");
+  render(`<h1>出身・部屋別 番付推移</h1>
+  <div class="ctrl ogsel"><select id="ogp" aria-label="出身">${optP}</select><select id="ogh" aria-label="部屋">${optH}</select>${cond.pref||cond.heya?'<button id="ogclr" class="btn">クリア</button>':""}</div>
+  <div id="ogbody"></div>`);
+  const go=()=>{location.hash=ogHash({pref:$("#ogp").value,heya:$("#ogh").value})};
+  $("#ogp").onchange=go;$("#ogh").onchange=go;if($("#ogclr"))$("#ogclr").onclick=()=>{location.hash="origin"};
+  const body=$("#ogbody");
+  if(!cond.pref&&!cond.heya){body.innerHTML='<div class="card muted">出身か部屋（または両方）を選ぶと、該当する現役力士の番付推移を表示します。</div>';return}
+  const fk=all.filter(r=>(!cond.pref||pref(r.shusshin)===cond.pref)&&(!cond.heya||r.heya===cond.heya));
+  if(!fk.length){body.innerHTML=`<div class="card muted">${esc(label)}の現役力士はいません。</div>`;return}
+  body.innerHTML=`<div class="card muted">${fk.length}人の番付履歴を読み込み中…${fk.length>OG_WARN?"（人数が多いため時間がかかります）":""}</div>`;
   const hist=await pool(fk,r=>api(`/rikishi/${r.id}?ranks=true`,86400),6);if(!live(my))return;
   const cur=await currentBasho();
   const people=fk.map((r,i)=>{const h=((hist[i]||{}).rankHistory||[]).map(x=>({b:String(x.bashoId),rk:parseRank(x.rank),raw:x.rank})).filter(x=>x.rk&&x.rk.ord);
@@ -30,7 +51,7 @@ async function viewFukuoka(my){
   const draw=()=>{
     const nB=FK_RANGE[FK.range],bands=FK_BANDS.slice(0,nB);
     let xs=bashoCandidates(200).filter(b=>b<=cur);
-    const earliest=Math.min(...people.flatMap(p=>[...p.h.keys()].map(Number)));
+    const earliest=Math.min(...people.flatMap(p=>[...p.h.keys()].map(Number)),+cur);
     xs=xs.filter(b=>+b>=earliest).reverse();
     if(FK.span!=="all")xs=xs.slice(-FK.span);
     const colW=xs.length>30?22:xs.length>14?34:46,L=74,T=10,R=126;
@@ -72,16 +93,22 @@ async function viewFukuoka(my){
     $$("#fklist button").forEach(b=>{b.onmouseenter=()=>{if(!pinned)hl(b.dataset.id)};b.onmouseleave=()=>{if(!pinned)hl(null)};b.onclick=()=>{pinned=pinned===b.dataset.id?null:b.dataset.id;hl(pinned);if(pinned){const g=$(`#fksvg .fklab[data-id="${pinned}"]`);if(g)g.scrollIntoView({block:"nearest",inline:"nearest"})}}});
   };
   const seg=(id,opts,key)=>`<span class="seg" id="${id}">${opts.map(([v,t])=>`<button data-v="${v}" class="${String(FK[key])===String(v)?"on":""}">${t}</button>`).join("")}</span>`;
-  render(`<h1>福岡出身力士 <span class="muted">${people.length}人</span></h1>
+  body.innerHTML=`<h2>${esc(label)} <span class="muted">${people.length}人</span></h2>
+  ${people.length>OG_WARN?`<div class="card warn">${people.length}人と多いため線が重なって見づらくなります。部屋も組み合わせて絞り込むのがおすすめです。</div>`:""}
   <div class="grid fksum">${FK_BANDS.map(b=>`<div class="kv"><span>${b.k}</span><b>${byDiv[b.k]||0}人</b></div>`).join("")}</div>
   <div class="ctrl">${seg("fkr",[["seki","関取"],["ms","幕下以上"],["all","全段"]],"range")}${seg("fks",[[12,"直近12場所"],[24,"直近24場所"],["all","初土俵から"]],"span")}</div>
   <p class="muted">縦が番付（上ほど上位）、横が場所です。名前は最新の場所の位置に付けています。線や名前にマウスを乗せる（スマホはタップ）と、その力士だけ強調します。点に乗せるとその場所の番付が出ます。表示範囲より下にいた場所は線を切っています。</p>
   <div class="chartwrap fkwrap" id="fkwrap"></div>
   <div class="fklist" id="fklist"></div>
-  <p class="muted">対象：Sumo APIの現役力士のうち出身地が福岡県の力士。番付の履歴もSumo APIによる。</p>`);
+  <p class="muted">対象：Sumo APIの現役力士のうち、上の条件に合う力士。番付の履歴もSumo APIによる。</p>`;
   $$("#fkr button").forEach(b=>b.onclick=()=>{FK.range=b.dataset.v;$$("#fkr button").forEach(x=>x.classList.toggle("on",x===b));draw()});
   $$("#fks button").forEach(b=>b.onclick=()=>{FK.span=b.dataset.v==="all"?"all":+b.dataset.v;$$("#fks button").forEach(x=>x.classList.toggle("on",x===b));draw()});
   draw();
 }
 
-{const _vb=viewBanzuke;viewBanzuke=async function(b,d,my){const h=decodeURIComponent(location.hash.slice(1));if(h==="fukuoka"){setNav("fukuoka");return viewFukuoka(my)}return _vb(b,d,my)}}
+{const _vb=viewBanzuke;viewBanzuke=async function(b,d,my){const h=decodeURIComponent(location.hash.slice(1));
+  if(h==="fukuoka"){location.replace("#"+ogHash({pref:"福岡"}));return}
+  if(h==="origin"||h.startsWith("origin?")){setNav("origin");return viewOrigin(ogParse(h),my)}
+  return _vb(b,d,my)}}
+/* 部屋の詳細ページに「番付推移」へのリンク */
+{const _vh=viewHeyaDetail;viewHeyaDetail=async function(en,my){await _vh(en,my);if(!live(my)||!HEN[en])return;const h1=$("#app h1");if(h1)h1.insertAdjacentHTML("beforeend",` <a class="oglink" href="#${ogHash({heya:en})}">所属力士の番付推移 →</a>`)}}

@@ -21,3 +21,8 @@
 .fklist button i{width:10px;height:3px;border-radius:2px;background:var(--c);display:inline-block}
 .fklist button span{color:var(--sub);font-size:11px}
 .fkhit{fill:none;stroke:transparent;stroke-width:12;pointer-events:stroke}
+/* 出身・部屋別の条件 */
+.ogsel select{min-width:160px}
+.card.warn{border-color:#d9a400;background:color-mix(in srgb,#eda100 10%,var(--card))}
+.oglink{font-size:13px;font-weight:400;margin-left:8px;color:var(--accent,#2f6db0)}
+#ogbody h2{font-size:17px;margin:6px 0 8px}
