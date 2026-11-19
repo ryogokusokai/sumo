@@ -1,6 +1,7 @@
 // 場所中のデータを data/live/{場所}.json に保存する（GitHub Actionsから実行）
-// AIの分析（スケジュールタスク）はこのファイルを読む。サイト本体はSumo APIを直接読む。
+// AIの分析（スケジュールタスク）はこのファイルを読む。サイト表示用のデータは cache.mjs が data/live/cache に保存する。
 import fs from "node:fs";
+await import("./cache.mjs");
 const API = "https://www.sumo-api.com/api";
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function get(p) {
