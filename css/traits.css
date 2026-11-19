@@ -1,0 +1,13 @@
+/* 力士の特性 */
+.trsum{margin:0 0 10px;line-height:1.7}
+.trgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.trgrid{grid-template-columns:1fr}}
+.trh{font-size:13px;color:var(--sub);margin-bottom:4px}
+.trh b{color:var(--ink);font-size:15px;margin-left:4px}
+.trbar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--chip)}
+.trbar i{display:block;height:100%}
+.trnote{font-size:11px;color:var(--sub);margin-top:4px}
+.trleg{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;margin:10px 0}
+.trleg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.trtbl{width:100%;font-size:13px;margin:4px 0 10px}
+.trkv{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
