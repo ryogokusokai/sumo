@@ -1,0 +1,14 @@
+/* 今日のニュース */
+.news{border-left:5px solid var(--accent)}
+.nhd{display:flex;gap:8px;align-items:baseline;margin-bottom:6px}.nhd b{font-size:16px}
+.nlist{list-style:none;margin:0;padding:0}
+.nlist li{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--line);line-height:1.6}
+.nlist li:last-child{border-bottom:0}
+.ntag{flex:none;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--chip);color:var(--sub);white-space:nowrap}
+.ntag[data-c="優勝争い"]{background:var(--accent);color:#fff}
+.ntag[data-c="大関"],.ntag[data-c="横綱"]{background:#7a4fa3;color:#fff}
+.ntag[data-c="三役"]{background:#2f6db0;color:#fff}
+.ntag[data-c="入幕"],.ntag[data-c="十両"]{background:#2e8a57;color:#fff}
+.ntag[data-c="陥落"]{background:#6b665d;color:#fff}
+.news details{margin-top:4px}.news summary{cursor:pointer}
+.nnote{margin:8px 0 0}#nrules ul{margin:4px 0;padding-left:18px}
