@@ -1,0 +1,25 @@
+name: snapshot
+# 場所中のデータを data/live に保存（AIの分析用）。時刻はUTC（日本時間 16:00〜20:30）
+on:
+  schedule:
+    - cron: "5,35 7-11 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: snapshot
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/snapshot.mjs
+      - name: commit
+        run: |
+          git config user.name "snapshot-bot"
+          git config user.email "snapshot-bot@users.noreply.github.com"
+          git add data/live
+          git diff --cached --quiet || (git commit -m "data: live snapshot" && git push)
