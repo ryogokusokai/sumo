@@ -60,13 +60,13 @@ async function buildNews(basho,D){
       if(kk)add("三役",70,`${pos}${nwL(r)}が勝ち越し（${nwRec(a)}）、三役の地位を守る見込みです。`);
       if(mk8)add("三役",72,`${pos}${nwL(r)}が負け越し（${nwRec(a)}）、${r.rk.ord===3?"関脇から":"三役から"}陥落の見込みです。`);
       if(r.rk.ord===3&&pRk===2){
-        if(a.w>=10&&b.w<10)add("大関",95,`前場所大関の関脇${nwL(r)}が10勝目。来場所の大関復帰が決まりました（陥落直後の場所で関脙10勝の特例）。`);
+        if(a.w>=10&&b.w<10)add("大関",95,`前場所大関の関脇${nwL(r)}が10勝目。来場所の大関復帰が決まりました（陥落直後の場所で関脇10勝の特例）。`);
         else if(a.l+a.a>=6&&b.l+b.a<6)add("大関",80,`関脇${nwL(r)}は6敗目で、大関復帰の条件（10勝）に届かなくなりました。`);
       }
       const sa=x=>x&&x.rk.ord>=3&&x.rk.ord<=4;
       if(sa(p)&&sa(q)){const base=p.wins+q.wins,need=33-base;
         if(a.w>=need&&b.w<need)add("大関",94,`${pos}${nwL(r)}が三役3場所合計33勝（大関昇進の目安）に到達しました（前々場所${q.wins}勝・前場所${p.wins}勝・今場所${a.w}勝）。`);
-        else if(a.w<need&&base>=20){const left=15-D;if(a.w+left>=need&&a.w>b.w)add("大関",78,`${pos}${nwL(r)}の大関取り：目安の33勝まであと${need-a.w}勝（残り${left}日）。`);
+        else if(a.w<need&&p.wins>=10&&base>=21){const left=15-D;if(a.w+left>=need&&a.w>b.w)add("大関",78,`${pos}${nwL(r)}の大関取り：目安の33勝まであと${need-a.w}勝（残り${left}日）。`);
           else if(a.w+left<need&&b.w+left+1>=need)add("大関",78,`${pos}${nwL(r)}は目安の33勝に届かなくなりました。`)}}
     }
   }
@@ -120,7 +120,7 @@ async function fillNews(basho,D,my){
       <li>十両→幕内：勝ち越し確定で「枚数−（白星−黒星）」が0以下なら可能性、−2以下なら濃厚。</li>
       <li>幕内→十両、十両→幕下：負け越し確定で「枚数＋（黒星−白星）」がその段の最下位の枚数を超えたら可能性、2枚以上超えたら濃厚。</li>
       <li>三役：平幕の勝ち越し確定者を「白星−黒星−（枚数−1）」で並べ、負け越しが確定した関脇・小結の人数（空き）までを濃厚、前頭2枚目以内などを可能性。</li>
-      <li>大関：前場所負け越しなら角番。陥落直後の関脇は10勝で大関復帰。昇進は「三役で3場所合計33勝」が目安（明文化された規定ではありません）。</li>
+      <li>大関：前場所負け越しなら角番。陥落直後の関脇は10勝で大関復帰。昇進は「三役で3場所合計33勝」が目安（明文化された規定ではありません）。前場所に三役で10勝以上した力士を「大関取り」として扱います。</li>
       <li>「新」「再」は番付の履歴で、その地位に就いたことがあるかで判定しています。</li></ul></div>`;
     const a=$("#nrule");if(a)a.onclick=e=>{e.preventDefault();const r=$("#nrules");r.hidden=!r.hidden};
   }catch(e){console.error(e);if(live(my)&&$("#news"))$("#news").innerHTML='<p class="muted">ニュースを作れませんでした（データの取得に失敗）。</p>'}
