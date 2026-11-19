@@ -1,0 +1,23 @@
+/* 福岡出身：番付推移 */
+.fkwrap{overflow-x:auto;position:relative;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 0}
+.fkband{opacity:.08}
+.fkbl{font-size:11px;fill:var(--ink);font-weight:700}
+.fktk{font-size:10px;fill:var(--sub)}
+.fkgl{stroke:var(--line);stroke-dasharray:2 3}
+.fkln{fill:none;stroke:var(--c);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.fkg circle{fill:var(--c);r:2.6}
+.fklead{stroke:var(--c);stroke-width:.8;opacity:.6}
+.fkrect{fill:var(--c)}
+.fklt{font-size:10.5px;fill:#fff;font-weight:600;pointer-events:none}
+.fkg{transition:opacity .15s}
+#fksvg.fkhl .fkg{opacity:.12}
+#fksvg.fkhl .fkg.on{opacity:1}
+#fksvg .fkg.on .fkln{stroke-width:3.4}
+#fksvg .fkg.on circle{r:4}
+.fkwrap .tip{position:absolute;pointer-events:none;white-space:nowrap}
+.fksum{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));margin-bottom:10px}
+.fklist{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+.fklist button{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:3px 9px;font-size:12px;cursor:pointer;font-family:inherit}
+.fklist button i{width:10px;height:3px;border-radius:2px;background:var(--c);display:inline-block}
+.fklist button span{color:var(--sub);font-size:11px}
+.fkhit{fill:none;stroke:transparent;stroke-width:12;pointer-events:stroke}
