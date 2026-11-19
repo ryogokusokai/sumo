@@ -7,6 +7,9 @@ async function viewDay(basho,day,div,my){
   addNames(bz.east);addNames(bz.west);
   const mk=[...(bz.east||[]),...(bz.west||[])];
   let maxDay=0;for(const r of mk)maxDay=Math.max(maxDay,dayFromRecord(r.record));
+  /* その日の取組がまだ残っている力士がいれば「途中経過」 */
+  const pending=maxDay?mk.filter(r=>{const x=(r.record||[])[maxDay-1];return x&&!x.result&&x.opponentID}).length:0;
+  const asOf=maxDay?(pending?`${maxDay}日目 途中経過`:`${maxDay}日目終了時点`):"場所前";
   day=Math.min(15,Math.max(1,+(day||maxDay||1)));
   if(div!=="Makuuchi"){const z=await api(`/basho/${basho}/banzuke/${div}`,bashoTTL(basho));addNames(z.east);addNames(z.west)}
   const t=await api(`/basho/${basho}/torikumi/${div}/${day}`,bashoTTL(basho));if(!live(my))return;
@@ -27,7 +30,7 @@ async function viewDay(basho,day,div,my){
   <div id="bouts">${tk.length?`<div class="card scroll"><table class="bout"><thead><tr><th class="r">東</th><th></th><th class="c">決まり手</th><th></th><th>西</th></tr></thead><tbody>
   ${tk.map(x=>{const er=parseRank(x.eastRank),wr=parseRank(x.westRank);return`<tr><td class="r"><span class="muted">${er?er.short:""}</span> ${link(x.eastId,x.eastShikona)}</td><td class="c">${mark(x.eastId,x.winnerId)}</td><td class="mid">${esc(kim(x.kimarite))||(x.winnerId?"":"—")}</td><td class="c">${mark(x.westId,x.winnerId)}</td><td>${link(x.westId,x.westShikona)} <span class="muted">${wr?wr.short:""}</span></td></tr>`}).join("")}
   </tbody></table></div>`:'<div class="card muted">この日の取組データはありません。</div>'}</div>
-  <h2>幕内 優勝争い（${maxDay}日目終了時点）</h2>
+  <h2>幕内 優勝争い（${asOf}）</h2>${pending?`<p class="muted" style="margin-top:-4px">${maxDay}日目の取組がまだ${pending}人分残っています。</p>`:""}
   <div class="card">${groups.map((g,i)=>g.length?`<div style="margin-bottom:8px"><b>${i===0?"首位":i+"差"}</b>（${g[0].rc.txt}）：${g.slice(0,i===2?12:30).map(x=>`<span class="muted">${x.rank.short}</span> ${link(x.id,x.en)}`).join("、")}${g.length>(i===2?12:30)?` ほか${g.length-(i===2?12:30)}人`:""}</div>`:"").join("")}
    ${maxDay>=2&&cont.length?`<div class="muted" style="margin:10px 0 4px">勝ち数の推移（上位${cont.length}人）　グラフをなぞると日ごとの勝ち数、凡例タップで表示切替</div><div class="chartwrap" id="race"></div><div class="legend" id="raceleg"></div>`:""}</div>`);
   $("#bsel").onchange=e=>location.hash=`day-${e.target.value}-1-${div}`;
