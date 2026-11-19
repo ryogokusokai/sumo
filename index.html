@@ -6,11 +6,12 @@
 <title>土俵データ帳</title>
 <script>try{const t=localStorage.getItem("sumo:theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/yusho.css?v=1">
 </head>
 <body>
 <header><div class="hwrap">
 <a class="logo" href="#banzuke">土俵データ帳</a>
-<nav id="nav"><a href="#banzuke" data-k="banzuke">番付</a><a href="#day" data-k="day">取組結果</a><a href="#rikishi" data-k="rikishi">力士一覧</a><a href="#heya" data-k="heya">部屋・一門</a></nav>
+<nav id="nav"><a href="#banzuke" data-k="banzuke">番付</a><a href="#day" data-k="day">取組結果</a><a href="#yusho" data-k="yusho">優勝争い</a><a href="#rikishi" data-k="rikishi">力士一覧</a><a href="#heya" data-k="heya">部屋・一門</a></nav>
 <div class="hright">
  <div class="gsearch"><input id="gq" type="search" placeholder="力士・部屋を検索" autocomplete="off" aria-label="力士・部屋を検索"><div id="gres" class="gres" hidden></div></div>
  <button id="theme" class="iconbtn" title="ライト／ダーク切替" aria-label="ライト／ダーク切替">◐</button>
@@ -26,6 +27,7 @@
 <script src="js/v-list.js?v=2"></script>
 <script src="js/v-rikishi.js?v=2"></script>
 <script src="js/v-heya.js?v=2"></script>
+<script src="js/v-yusho.js?v=1"></script>
 <script>route();</script>
 </body>
 </html>
