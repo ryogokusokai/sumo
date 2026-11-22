@@ -1,0 +1,27 @@
+/* 場所総括 */
+.smlead{font-size:15px;margin:0 0 12px;max-width:62em}
+.smtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-bottom:6px}
+.smtile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:2px;align-content:start}
+.smtile.lead{border-left:4px solid var(--accent)}
+.smtile .k{font-size:12px;color:var(--sub)}.smtile .v{font-size:19px;font-weight:700}.smtile .v a.rk{font-size:19px}.smtile .n{font-size:12.5px}
+.smtbl td{vertical-align:top}.smtbl.wrap td,.smtbl td.smnote,.smtbl td.smlate{white-space:normal}
+.smtbl td.smnote{min-width:14em;font-size:13px}.smtbl td.smlate{min-width:18em;font-size:13px;line-height:1.7}
+.smtbl td.smlate small{margin:0 6px 0 2px}
+.smhoshi{letter-spacing:1px;font-size:12px}
+.num{font-variant-numeric:tabular-nums}
+.smcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;align-items:start}
+.smcols h3,.smtopic h3{font-size:14px;margin:0 0 6px}
+h3{font-size:14px;margin:14px 0 6px}
+.smleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin-bottom:6px}.smleg i{display:inline-block;width:14px;height:4px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.smchart{position:relative;margin-bottom:8px}.smchart svg{width:100%;height:auto}
+.smbar{display:grid;grid-template-columns:6.5em 1fr 2.5em;gap:8px;align-items:center;padding:2px 0;font-size:13px}.smbar b{text-align:right}
+.smpill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;font-weight:700;white-space:nowrap}
+.smpill.hit{background:color-mix(in srgb,var(--win) 15%,transparent);color:var(--win)}
+.smpill.miss{background:color-mix(in srgb,var(--loss) 14%,transparent);color:var(--loss)}
+.smlist{margin:0;padding-left:18px}.smlist li{margin:5px 0}
+.smtopics{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.smtopic{display:grid;gap:6px;align-content:start;margin:0}.smtopic p{margin:0}
+.smtopic .tag2{font-size:12px;color:var(--accent);font-weight:700}
+.smtopic .why{font-size:12.5px;color:var(--sub);border-top:1px dashed var(--line);padding-top:6px}
+a.smgo{display:block;text-decoration:none;color:var(--ink);border-left:4px solid var(--accent)}
+@media (max-width:520px){.smcols,.smtopics{grid-template-columns:1fr}}
