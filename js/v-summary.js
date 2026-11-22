@@ -82,7 +82,7 @@ async function viewSummary(basho,my){
   <h2>予想の答え合わせ</h2>${predBlock}
   <h2>ネットで関心を集めた話題</h2><p class="muted">${esc(S.topicsNote||"")}</p>
   <div class="smtopics">${(S.topics||[]).map(t=>`<article class="card smtopic"><span class="tag2">${esc(t.tag)}</span><h3>${esc(t.h)}</h3><p>${esc(t.t)}</p><p class="why">${esc(t.why)}</p></article>`).join("")}</div>
-  <h2>次の場所への展望</h2><div class="card"><ul class="smlist">${(S.outlook||[]).map(o=>`<li><b>${esc(o.h)}</b> <span class="tag">${esc(o.k)}</span><br>${esc(o.t)}</li>`).join("")}</ul><p class="muted">番付は協会の発表前です。「見立て」はこのサイトの見方です。</p></div>
+  <h2>次の場所への展望</h2><div class="card"><ul class="smlist">${(S.outlook||[]).map(o=>`<li><b>${esc(o.h)}</b> <span class="tag">${esc(o.k)}</span><br>${esc(o.t)}</li>`).join("")}</ul><p class="muted">番付は協会の発表前です。「見立て」はこのサイトの見方です。</p>${S.yosoLink?`<a class="card smgo" href="${esc(S.yosoLink)}"><b>番付予想を見る →</b> <span class="muted">幕内・十両の全員の予想と、ネットの予想との比較</span></a>`:""}</div>
   <details class="card"><summary><b>このページについて・出典</b></summary>
    <ul class="smlist muted"><li>成績・星取・推移・場所全体のデータは、Sumo APIのデータ（${esc(new Date(D.fetchedAt).toLocaleString("ja-JP",{timeZone:"Asia/Tokyo"}))}取得）から計算しています。優勝決定戦は星取に含みません。</li><li>三賞・話題・展望は報道をもとに書いています。</li></ul>
    <ul class="smlist">${(S.sources||[]).map(s=>`<li><a href="${esc(s.u)}" target="_blank" rel="noopener">${esc(s.t)}</a></li>`).join("")}</ul></details>`);
